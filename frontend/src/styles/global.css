@@ -1,0 +1,338 @@
+
+:root {
+  --bg: #f5f7fb;
+  --card-bg: #ffffff;
+  --border: #e5e9f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --sp-color: #dc2626;
+  --se-color: #0891b2;
+  --sg-color: #16a34a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== Navegaçao (temporaria ate o Header.jsx oficial) ===== */
+
+.nav-temp {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 40px;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-temp-logo {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.nav-temp-links {
+  display: flex;
+  gap: 6px;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.nav-temp-links a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  transition: all 0.15s ease;
+}
+
+.nav-temp-links a.ativo,
+.nav-temp-links a:hover {
+  background: var(--text);
+  color: #fff;
+}
+
+/* ==== Botoes === */
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* === Badges de prioridade == */
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.badge-sp { background: rgba(220, 38, 38, 0.1); color: var(--sp-color); }
+.badge-se { background: rgba(8, 145, 178, 0.1); color: var(--se-color); }
+.badge-sg { background: rgba(22, 163, 74, 0.1); color: var(--sg-color); }
+
+/* === Home ==== */
+
+.hero {
+  text-align: center;
+  padding: 80px 20px 60px;
+}
+
+.hero h1 {
+  font-size: 42px;
+  color: var(--text);
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.hero p {
+  color: var(--text-muted);
+  font-size: 16px;
+  margin-bottom: 28px;
+}
+
+.features {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 20px 80px;
+}
+
+.feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 26px;
+  width: 240px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.feature-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+}
+
+.feature-card h3 {
+  margin: 10px 0 6px;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.feature-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ==== Painel === */
+
+.painel-page {
+  min-height: 100vh;
+}
+
+.painel-conteudo {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 50px 20px;
+}
+
+.chamada-atual {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px;
+  text-align: center;
+  margin-bottom: 36px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+.chamada-atual h1 {
+  font-size: 40px;
+  margin: 14px 0 6px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.chamada-atual p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.ultimas-chamadas h2 {
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.chamada-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.chamada-guiche {
+  color: var(--text-muted);
+}
+
+/* === Atendimento ==== */
+
+.atd-page {
+  min-height: 100vh;
+}
+
+.atd-conteudo {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 50px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 24px;
+}
+
+.atd-fila,
+.atd-painel-direito {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.atd-fila h2 {
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 18px;
+}
+
+.atd-fila-itens {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.atd-fila-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.atd-fila-item strong {
+  font-size: 20px;
+  color: var(--text);
+}
+
+.atd-guiche {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.atd-guiche strong {
+  color: var(--text);
+}
+
+.atd-senha-atual {
+  margin-bottom: 24px;
+}
+
+.atd-senha-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.atd-senha-atual h1 {
+  font-size: 28px;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+.atd-status {
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: 8px;
+  vertical-align: middle;
+}
+
+.atd-vazio {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.atd-botoes {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.atd-nota {
+  font-size: 12px;
+  color: var(--text-muted);
+}
