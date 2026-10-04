@@ -1,44 +1,73 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/global.css";
 
-const senhasChamadasMock = [
-  { numero: "261002-SG001", tipo: "SG", guiche: 1 },
-  { numero: "261002-SE001", tipo: "SE", guiche: 2 },
-  { numero: "261002-SP001", tipo: "SP", guiche: 1 },
-];
-
+const CHAVE = "nassauTickets:senhas";
 const nomeTipo = { SP: "Prioritário", SE: "Exames", SG: "Geral" };
 
-function Painel() {
-  const [senhasChamadas] = useState(senhasChamadasMock);
+function lerChamadas() {
+  try {
+    const senhas = JSON.parse(localStorage.getItem(CHAVE) || "[]");
 
-  const ultimasCinco = senhasChamadas.slice(-5);
-  const chamadaAtual = ultimasCinco[ultimasCinco.length - 1];
-  const anteriores = ultimasCinco.slice(0, -1).reverse();
+    if (!Array.isArray(senhas)) return [];
+
+    return senhas
+      .filter((senha) => senha.ordemChamada > 0)
+      .sort((a, b) => b.ordemChamada - a.ordemChamada)
+      .slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+function Painel() {
+  const [chamadas, setChamadas] = useState(lerChamadas);
+
+  useEffect(() => {
+    function atualizar(evento) {
+      if (evento.key === CHAVE) {
+        setChamadas(lerChamadas());
+      }
+    }
+
+    window.addEventListener("storage", atualizar);
+    return () => window.removeEventListener("storage", atualizar);
+  }, []);
+
+  const atual = chamadas[0];
+  const anteriores = chamadas.slice(1);
 
   return (
     <div className="painel-page">
-
       <div className="painel-conteudo">
-        {chamadaAtual && (
-          <div className="chamada-atual">
-            <span className={`badge badge-${chamadaAtual.tipo.toLowerCase()}`}>
-              Atendimento {nomeTipo[chamadaAtual.tipo]}
-            </span>
-            <h1>{chamadaAtual.numero}</h1>
-            <p>Dirija-se ao Guichê {chamadaAtual.guiche}</p>
-          </div>
-        )}
+        <div className="chamada-atual">
+          {atual ? (
+            <>
+              <span className={`badge badge-${atual.tipo.toLowerCase()}`}>
+                Atendimento {nomeTipo[atual.tipo]}
+              </span>
+              <h1>{atual.numero}</h1>
+              <p>Dirija-se ao Guichê {atual.guiche}</p>
+            </>
+          ) : (
+            <>
+              <h1>Aguardando chamada</h1>
+              <p>Nenhuma senha foi chamada ainda.</p>
+            </>
+          )}
+        </div>
 
         <div className="ultimas-chamadas">
           <h2>Últimas chamadas</h2>
-          {anteriores.map((s) => (
-            <div className="chamada-linha" key={s.numero}>
-              <span>{s.numero}</span>
-              <span className={`badge badge-${s.tipo.toLowerCase()}`}>
-                {nomeTipo[s.tipo]}
+
+          {anteriores.map((senha) => (
+            <div className="chamada-linha" key={senha.ordemChamada}>
+              <span>{senha.numero}</span>
+              <span className={`badge badge-${senha.tipo.toLowerCase()}`}>
+                {nomeTipo[senha.tipo]}
               </span>
-              <span className="chamada-guiche">Guichê {s.guiche}</span>
+              <span className="chamada-guiche">
+                Guichê {senha.guiche}
+              </span>
             </div>
           ))}
         </div>

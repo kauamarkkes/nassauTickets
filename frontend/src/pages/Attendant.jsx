@@ -44,6 +44,13 @@ function Attendant() {
     return null;
   }
 
+  function proximaOrdemChamada() {
+  return senhas.reduce(
+    (maior, senha) => Math.max(maior, senha.ordemChamada ?? 0),
+    0
+  ) + 1;
+}
+
   function chamarProxima() {
     if (senhaAtual) return;
     const proxima = proximaSenhaDaFila();
@@ -52,32 +59,45 @@ function Attendant() {
     setSenhas((atuais) =>
       atuais.map((s) =>
         s.numero === proxima.numero
-          ? { ...s, status: "CHAMADA", guiche: GUICHE_ATUAL, chamadas: 1 }
+          ? {
+            ...s,
+            status: "CHAMADA",
+            guiche: GUICHE_ATUAL,
+            chamadas: 1,
+            ordemChamada: proximaOrdemChamada(),
+          }
           : s
       )
     );
   }
 
-  function chamarNovamente() {
-    if (!senhaAtual) return;
+function chamarNovamente() {
+  if (!senhaAtual) return;
 
-    if (senhaAtual.chamadas >= 2) {
-      setSenhas((atuais) =>
-        atuais.map((s) =>
-          s.numero === senhaAtual.numero ? { ...s, status: "NÃO_COMPARECEU" } : s
-        )
-      );
-      return;
-    }
-
+  if (senhaAtual.chamadas >= 2) {
     setSenhas((atuais) =>
       atuais.map((s) =>
         s.numero === senhaAtual.numero
-          ? { ...s, status: "CHAMADA_NOVAMENTE", chamadas: s.chamadas + 1 }
+          ? { ...s, status: "NÃO_COMPARECEU" }
           : s
       )
     );
+    return;
   }
+
+  setSenhas((atuais) =>
+    atuais.map((s) =>
+      s.numero === senhaAtual.numero
+        ? {
+            ...s,
+            status: "CHAMADA_NOVAMENTE",
+            chamadas: s.chamadas + 1,
+            ordemChamada: proximaOrdemChamada(),
+          }
+        : s
+    )
+  );
+}
 
   function iniciarAtendimento() {
     if (!senhaAtual) return;
