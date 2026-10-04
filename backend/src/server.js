@@ -127,6 +127,18 @@ app.patch("/senhas/:numero/finalizar", (req, res) => {
   return res.json(senha);
 });
 
+app.get("/painel", (req, res) => {
+  const ultimasCinco = senhas
+    .filter((senha) => senha.ordemChamada > 0)
+    .sort((a, b) => b.ordemChamada - a.ordemChamada)
+    .slice(0, 5);
+
+  return res.json({
+    atual: ultimasCinco[0] ?? null,
+    anteriores: ultimasCinco.slice(1),
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
