@@ -139,6 +139,47 @@ app.get("/painel", (req, res) => {
   });
 });
 
+app.post("/senhas/:numero/chamar-novamente", (req, res) => {
+  const senha = senhas.find(
+    (item) => item.numero === req.params.numero
+  );
+
+  if (!senha) {
+    return res.status(404).json({ erro: "Senha não encontrada." });
+  }
+
+  if (senha.status !== "CHAMADA" || senha.chamadas !== 1) {
+    return res.status(409).json({
+      erro: "Esta senha não pode ser chamada novamente.",
+    });
+  }
+
+  senha.status = "CHAMADA_NOVAMENTE";
+  senha.chamadas = 2;
+  senha.ordemChamada = ++ordemChamada;
+
+  return res.json(senha);
+});
+
+app.patch("/senhas/:numero/nao-compareceu", (req, res) => {
+  const senha = senhas.find(
+    (item) => item.numero === req.params.numero
+  );
+
+  if (!senha) {
+    return res.status(404).json({ erro: "Senha não encontrada." });
+  }
+
+  if (senha.status !== "CHAMADA_NOVAMENTE" || senha.chamadas !== 2) {
+    return res.status(409).json({
+      erro: "A senha precisa ter sido chamada duas vezes.",
+    });
+  }
+
+  senha.status = "NÃO_COMPARECEU";
+  return res.json(senha);
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
