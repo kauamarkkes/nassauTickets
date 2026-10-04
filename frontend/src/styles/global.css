@@ -796,3 +796,57 @@ body {
     transition: none;
   }
 }
+
+@media (max-width: 720px) {
+  .atd-conteudo {
+    grid-template-columns: 1fr;
+    padding: 24px 16px;
+  }
+
+  .atd-fila,
+  .atd-painel-direito {
+    padding: 20px;
+  }
+
+  .atd-botoes {
+    flex-direction: column;
+  }
+
+  .atd-botoes button {
+    width: 100%;
+  }
+}
+
+  .painel-conteudo {
+    padding: 24px 16px;
+  }
+
+  .chamada-atual {
+    padding: 24px 16px;
+  }
+
+  .chamada-atual h1 {
+    font-size: clamp(24px, 7vw, 40px);
+    overflow-wrap: anywhere;
+  }
+
+  .chamada-linha {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+    .hero {
+    padding: 48px 16px 36px;
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 8vw, 42px);
+  }
+
+  .features {
+    padding: 0 16px 48px;
+  }
+
+  .feature-card {
+    width: 100%;
+  }

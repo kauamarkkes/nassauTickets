@@ -54,15 +54,17 @@ export default function Totem() {
       <h1>Retirar senha</h1>
       <p>Escolha o tipo de atendimento:</p>
 
-      {tipos.map(({ sigla, titulo, descricao }) => (
-        <Card
-          key={sigla}
-          sigla={sigla}
-          titulo={titulo}
-          descricao={descricao}
-          rodape={<Button onClick={() => emitir(sigla)}>Emitir senha</Button>}
-        />
-      ))}
+      <div className="nt-grid">
+        {tipos.map(({ sigla, titulo, descricao }) => (
+          <Card
+            key={sigla}
+            sigla={sigla}
+            titulo={titulo}
+            descricao={descricao}
+            rodape={<Button onClick={() => emitir(sigla)}>Emitir senha</Button>}
+          />
+        ))}
+      </div>
 
       {erro && <Message tipo="error">{erro}</Message>}
       {senhaEmitida && (
