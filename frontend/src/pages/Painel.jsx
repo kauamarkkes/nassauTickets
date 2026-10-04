@@ -1,5 +1,4 @@
 import { useState } from "react";
-import TopNavTemp from "../components/TopNavTemp";
 import "../styles/global.css";
 
 const senhasChamadasMock = [
@@ -19,7 +18,6 @@ function Painel() {
 
   return (
     <div className="painel-page">
-      <TopNavTemp />
 
       <div className="painel-conteudo">
         {chamadaAtual && (

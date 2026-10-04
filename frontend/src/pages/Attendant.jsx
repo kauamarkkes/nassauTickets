@@ -1,5 +1,4 @@
 import { useState } from "react";
-import TopNavTemp from "../components/TopNavTemp";
 import "../styles/global.css";
 
 const senhasIniciais = [
@@ -87,7 +86,6 @@ function Attendant() {
 
   return (
     <div className="atd-page">
-      <TopNavTemp />
 
       <div className="atd-conteudo">
         <div className="atd-fila">

@@ -1,11 +1,9 @@
 import { Link } from "react-router-dom";
-import TopNavTemp from "../components/TopNavTemp";
 import "../styles/global.css";
 
 function Home() {
   return (
     <div>
-      <TopNavTemp />
 
       <section className="hero">
         <h1>
