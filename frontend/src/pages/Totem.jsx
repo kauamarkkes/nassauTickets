@@ -2,8 +2,7 @@ import { useState } from "react";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import Message from "../components/Message";
-
-const CHAVE = "nassauTickets:senhas";
+import { apiRequest } from "../api";
 
 const tipos = [
   { sigla: "SP", titulo: "Prioritário", descricao: "Atendimento preferencial" },
@@ -11,42 +10,29 @@ const tipos = [
   { sigla: "SE", titulo: "Exames", descricao: "Retirada de exames" },
 ];
 
-function lerSenhas() {
-  try {
-    const senhas = JSON.parse(localStorage.getItem(CHAVE) || "[]");
-    return Array.isArray(senhas) ? senhas : [];
-  } catch {
-    return [];
-  }
-}
-
 export default function Totem() {
-  const [senhaEmitida, setSenhaEmitida] = useState(
-    () => lerSenhas().at(-1) ?? null
-  );
+  const [senhaEmitida, setSenhaEmitida] = useState(null);
   const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  function emitir(tipo) {
+  async function emitir(tipo) {
+    if (carregando) return;
+
     setErro("");
+    setCarregando(true);
 
     try {
-      const senhas = lerSenhas();
-      const sequencia = senhas.filter((senha) => senha.tipo === tipo).length + 1;
-      const numero = `${String(sequencia).padStart(3, "0")}-${tipo}`;
-      const novaSenha = {
-        id: crypto.randomUUID(),
-        numero,
-        tipo,
-        status: "AGUARDANDO",
-        guiche: null,
-        chamadas: 0,
-      };
+      const novaSenha = await apiRequest("/senhas", {
+        method: "POST",
+        body: JSON.stringify({ tipo }),
+      });
 
-      localStorage.setItem(CHAVE, JSON.stringify([...senhas, novaSenha]));
       setSenhaEmitida(novaSenha);
-    } catch (erro) {
-      console.error("Erro ao emitir senha:", erro);
-      setErro("Não foi possível emitir a senha. Tente novamente.");
+    } catch (error) {
+      console.error("Erro ao emitir senha:", error);
+      setErro(error.message);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -62,11 +48,16 @@ export default function Totem() {
             sigla={sigla}
             titulo={titulo}
             descricao={descricao}
-            rodape={<Button onClick={() => emitir(sigla)}>Emitir senha</Button>}
+            rodape={
+              <Button onClick={() => emitir(sigla)}>
+                Emitir senha
+              </Button>
+            }
           />
         ))}
       </div>
 
+      {carregando && <p role="status">Emitindo senha...</p>}
       {erro && <Message tipo="error">{erro}</Message>}
       {senhaEmitida && (
         <Message tipo="success" titulo="Senha emitida">
