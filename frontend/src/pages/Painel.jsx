@@ -1,37 +1,30 @@
 import { useEffect, useState } from "react";
+import { apiRequest } from "../api";
 import "../styles/global.css";
 
-const CHAVE = "nassauTickets:senhas";
 const nomeTipo = { SP: "Prioritário", SE: "Exames", SG: "Geral" };
 
-function lerChamadas() {
-  try {
-    const senhas = JSON.parse(localStorage.getItem(CHAVE) || "[]");
-
-    if (!Array.isArray(senhas)) return [];
-
-    return senhas
-      .filter((senha) => senha.ordemChamada > 0)
-      .sort((a, b) => b.ordemChamada - a.ordemChamada)
-      .slice(0, 5);
-  } catch {
-    return [];
-  }
-}
-
 function Painel() {
-  const [chamadas, setChamadas] = useState(lerChamadas);
 
-  useEffect(() => {
-    function atualizar(evento) {
-      if (evento.key === CHAVE) {
-        setChamadas(lerChamadas());
-      }
+const [chamadas, setChamadas] = useState([]);
+
+useEffect(() => {
+  async function atualizar() {
+    try {
+      const dados = await apiRequest("/painel");
+      setChamadas([
+        ...(dados.atual ? [dados.atual] : []),
+        ...dados.anteriores,
+      ]);
+    } catch (erro) {
+      console.error("Erro ao atualizar painel:", erro);
     }
+  }
 
-    window.addEventListener("storage", atualizar);
-    return () => window.removeEventListener("storage", atualizar);
-  }, []);
+  atualizar();
+  const intervalo = setInterval(atualizar, 3000);
+  return () => clearInterval(intervalo);
+}, []);
 
   const atual = chamadas[0];
   const anteriores = chamadas.slice(1);
@@ -75,5 +68,6 @@ function Painel() {
     </div>
   );
 }
+
 
 export default Painel;
