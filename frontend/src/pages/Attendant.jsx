@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../styles/global.css";
 
 const senhasIniciais = [
@@ -12,7 +12,20 @@ const senhasIniciais = [
 const GUICHE_ATUAL = 1;
 
 function Attendant() {
-  const [senhas, setSenhas] = useState(senhasIniciais);
+  const [senhas, setSenhas] = useState(() => {
+  try {
+    const salvas = JSON.parse(
+      localStorage.getItem("nassauTickets:senhas") || "[]"
+    );
+    return Array.isArray(salvas) ? salvas : [];
+  } catch {
+    return [];
+  }
+});
+
+  useEffect(() => {
+    localStorage.setItem("nassauTickets:senhas", JSON.stringify(senhas));
+  }, [senhas]);
 
   const senhaAtual = senhas.find(
     (s) => s.guiche === GUICHE_ATUAL && s.status !== "ATENDIDA" && s.status !== "NÃO_COMPARECEU"

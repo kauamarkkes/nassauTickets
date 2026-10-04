@@ -44,7 +44,8 @@ export default function Totem() {
 
       localStorage.setItem(CHAVE, JSON.stringify([...senhas, novaSenha]));
       setSenhaEmitida(novaSenha);
-    } catch {
+    } catch (erro) {
+      console.error("Erro ao emitir senha:", erro);
       setErro("Não foi possível emitir a senha. Tente novamente.");
     }
   }
