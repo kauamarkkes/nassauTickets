@@ -1,9 +1,22 @@
 import { useEffect, useState } from "react";
-import { apiRequest } from "../api";
+import {
+  obterSenhas,
+  chamarProxima,
+  iniciarAtendimento,
+  finalizarAtendimento,
+  chamarNovamente,
+  marcarNaoCompareceu,
+} from "../storage";
 import "../styles/global.css";
 
 const GUICHE_ATUAL = 1;
-const STATUS_ATIVOS = ["CHAMADA", "CHAMADA_NOVAMENTE", "EM_ATENDIMENTO"];
+const ATENDENTE_ATUAL = "Atendente 01";
+
+const STATUS_ATIVOS = [
+  "CHAMADA",
+  "CHAMADA_NOVAMENTE",
+  "EM_ATENDIMENTO",
+];
 
 function Attendant() {
   const [senhas, setSenhas] = useState([]);
@@ -11,16 +24,19 @@ function Attendant() {
   const [carregando, setCarregando] = useState(false);
 
   async function atualizarSenhas() {
-    const dados = await apiRequest("/senhas");
-    setSenhas(dados);
+    try {
+      const dados = await obterSenhas();
+      setSenhas(dados);
+      setErro("");
+    } catch (error) {
+      setErro(error.message);
+    }
   }
 
   useEffect(() => {
-    atualizarSenhas().catch((error) => setErro(error.message));
+    atualizarSenhas();
 
-    const intervalo = setInterval(() => {
-      atualizarSenhas().catch((error) => setErro(error.message));
-    }, 3000);
+    const intervalo = setInterval(atualizarSenhas, 1000);
 
     return () => clearInterval(intervalo);
   }, []);
@@ -33,89 +49,141 @@ function Attendant() {
 
   function contarNaFila(tipo) {
     return senhas.filter(
-      (senha) => senha.tipo === tipo && senha.status === "AGUARDANDO"
+      (senha) =>
+        senha.tipo === tipo &&
+        ["EMITIDA", "AGUARDANDO"].includes(senha.status)
     ).length;
   }
 
-  async function executar(caminho, metodo = "PATCH", corpo) {
+  async function executar(acao) {
     setErro("");
     setCarregando(true);
 
     try {
-      await apiRequest(caminho, {
-        method: metodo,
-        ...(corpo && { body: JSON.stringify(corpo) }),
-      });
+      await acao();
       await atualizarSenhas();
     } catch (error) {
+      console.error("Erro no atendimento:", error);
       setErro(error.message);
     } finally {
       setCarregando(false);
     }
   }
 
-  function chamarProxima() {
-    executar("/atendimentos/proxima", "POST", { guiche: GUICHE_ATUAL });
+  function chamarProximaSenha() {
+    executar(() =>
+      chamarProxima(GUICHE_ATUAL, ATENDENTE_ATUAL)
+    );
   }
 
-  function chamarNovamente() {
-    executar(`/senhas/${senhaAtual.numero}/chamar-novamente`, "POST");
+  function chamarNovamenteSenha() {
+    if (!senhaAtual) return;
+
+    executar(() =>
+      chamarNovamente(senhaAtual.numero)
+    );
   }
 
-  function iniciarAtendimento() {
-    executar(`/senhas/${senhaAtual.numero}/iniciar`);
+  function iniciar() {
+    if (!senhaAtual) return;
+
+    executar(() =>
+      iniciarAtendimento(senhaAtual.numero)
+    );
   }
 
-  function finalizarAtendimento() {
-    executar(`/senhas/${senhaAtual.numero}/finalizar`);
+  function finalizar() {
+    if (!senhaAtual) return;
+
+    executar(() =>
+      finalizarAtendimento(senhaAtual.numero)
+    );
   }
 
-  function marcarNaoCompareceu() {
-    executar(`/senhas/${senhaAtual.numero}/nao-compareceu`);
+  function naoCompareceu() {
+    if (!senhaAtual) return;
+
+    executar(() =>
+      marcarNaoCompareceu(senhaAtual.numero)
+    );
   }
 
   return (
     <div className="atd-page">
       <div className="atd-conteudo">
+
         <div className="atd-fila">
           <h2>Fila de atendimento</h2>
+
           <div className="atd-fila-itens">
+
             <div className="atd-fila-item">
-              <span className="badge badge-sp">Prioritárias</span>
-              <strong>{String(contarNaFila("SP")).padStart(2, "0")}</strong>
+              <span className="badge badge-sp">
+                Prioritárias
+              </span>
+
+              <strong>
+                {String(contarNaFila("SP")).padStart(2, "0")}
+              </strong>
             </div>
+
             <div className="atd-fila-item">
-              <span className="badge badge-se">Exames</span>
-              <strong>{String(contarNaFila("SE")).padStart(2, "0")}</strong>
+              <span className="badge badge-se">
+                Exames
+              </span>
+
+              <strong>
+                {String(contarNaFila("SE")).padStart(2, "0")}
+              </strong>
             </div>
+
             <div className="atd-fila-item">
-              <span className="badge badge-sg">Gerais</span>
-              <strong>{String(contarNaFila("SG")).padStart(2, "0")}</strong>
+              <span className="badge badge-sg">
+                Gerais
+              </span>
+
+              <strong>
+                {String(contarNaFila("SG")).padStart(2, "0")}
+              </strong>
             </div>
+
           </div>
         </div>
 
         <div className="atd-painel-direito">
+
           <div className="atd-guiche">
-            Guichê selecionado: <strong>Guichê {GUICHE_ATUAL}</strong>
+            Guichê selecionado:{" "}
+            <strong>Guichê {GUICHE_ATUAL}</strong>
           </div>
 
           <div className="atd-senha-atual">
-            <span className="atd-senha-label">Senha atual</span>
+
+            <span className="atd-senha-label">
+              Senha atual
+            </span>
+
             {senhaAtual ? (
               <h1>
                 {senhaAtual.numero}{" "}
-                <span className="atd-status">{senhaAtual.status}</span>
+
+                <span className="atd-status">
+                  {senhaAtual.status}
+                </span>
               </h1>
             ) : (
-              <p className="atd-vazio">Nenhuma senha em atendimento</p>
+              <p className="atd-vazio">
+                Nenhuma senha em atendimento
+              </p>
             )}
+
           </div>
 
           <div className="atd-botoes">
+
             <button
               className="btn-primary"
-              onClick={chamarProxima}
+              onClick={chamarProximaSenha}
               disabled={carregando || !!senhaAtual}
             >
               Chamar próxima
@@ -123,11 +191,13 @@ function Attendant() {
 
             <button
               className="btn-outline"
-              onClick={iniciarAtendimento}
+              onClick={iniciar}
               disabled={
                 carregando ||
                 !senhaAtual ||
-                !["CHAMADA", "CHAMADA_NOVAMENTE"].includes(senhaAtual.status)
+                !["CHAMADA", "CHAMADA_NOVAMENTE"].includes(
+                  senhaAtual.status
+                )
               }
             >
               Iniciar atendimento
@@ -135,7 +205,7 @@ function Attendant() {
 
             <button
               className="btn-outline"
-              onClick={chamarNovamente}
+              onClick={chamarNovamenteSenha}
               disabled={
                 carregando ||
                 !senhaAtual ||
@@ -148,7 +218,7 @@ function Attendant() {
 
             <button
               className="btn-outline"
-              onClick={finalizarAtendimento}
+              onClick={finalizar}
               disabled={
                 carregando ||
                 !senhaAtual ||
@@ -160,7 +230,7 @@ function Attendant() {
 
             <button
               className="btn-outline"
-              onClick={marcarNaoCompareceu}
+              onClick={naoCompareceu}
               disabled={
                 carregando ||
                 !senhaAtual ||
@@ -170,10 +240,17 @@ function Attendant() {
             >
               Não compareceu
             </button>
+
           </div>
 
-          {erro && <p role="alert">{erro}</p>}
+          {erro && (
+            <p role="alert">
+              {erro}
+            </p>
+          )}
+
         </div>
+
       </div>
     </div>
   );
