@@ -5,6 +5,11 @@ import {
   emitirSenha,
   inserirSenhaNaTransacao,
   listarSenhas,
+  chamarProximaNaTransacao,
+  iniciarAtendimentoNaTransacao,
+  finalizarAtendimentoNaTransacao,
+  chamarNovamenteNaTransacao,
+  marcarNaoCompareceuNaTransacao,
 } from "../src/senhasRepository.js";
 
 test("emissão no MySQL preserva formato, sequência e dados após rollback", async () => {
@@ -38,6 +43,46 @@ test("emissão no MySQL preserva formato, sequência e dados após rollback", as
     assert.equal(depois[0].total, antes[0].total);
     assert.equal((await listarSenhas()).length, antes[0].total);
     await assert.rejects(emitirSenha("X"), { code: "TIPO_INVALIDO" });
+  } finally {
+    try {
+      await conexao.rollback();
+    } finally {
+      conexao.release();
+      await encerrarPool();
+    }
+  }
+});
+
+test("chamada, atendimento e ausência seguem os estados sem persistir dados de teste", async () => {
+  const pool = obterPool();
+  const conexao = await pool.getConnection();
+  try {
+    await conexao.beginTransaction();
+    const agora = new Date();
+    const sp = await inserirSenhaNaTransacao(conexao, "SP", agora);
+    const se = await inserirSenhaNaTransacao(conexao, "SE", agora);
+    const sg = await inserirSenhaNaTransacao(conexao, "SG", agora);
+
+    const primeira = await chamarProximaNaTransacao(conexao, 60001, "Teste");
+    assert.equal(primeira.numero, sp.numero);
+    assert.equal(primeira.status, "CHAMADA");
+    await assert.rejects(chamarProximaNaTransacao(conexao, 60001, "Teste"), {
+      status: 409,
+    });
+    const iniciada = await iniciarAtendimentoNaTransacao(conexao, sp.numero);
+    assert.equal(iniciada.status, "EM_ATENDIMENTO");
+    const finalizada = await finalizarAtendimentoNaTransacao(conexao, sp.numero);
+    assert.equal(finalizada.status, "ATENDIDA");
+
+    const segunda = await chamarProximaNaTransacao(conexao, 60002, "Teste");
+    assert.equal(segunda.numero, se.numero);
+    const rechamada = await chamarNovamenteNaTransacao(conexao, se.numero);
+    assert.equal(rechamada.chamadas, 2);
+    assert.equal(rechamada.status, "CHAMADA_NOVAMENTE");
+    const ausente = await marcarNaoCompareceuNaTransacao(conexao, se.numero);
+    assert.equal(ausente.status, "NÃO_COMPARECEU");
+    const terceira = await chamarProximaNaTransacao(conexao, 60003, "Teste");
+    assert.equal(terceira.numero, sg.numero);
   } finally {
     try {
       await conexao.rollback();

@@ -106,3 +106,170 @@ export async function inserirSenhaNaTransacao(conexao, tipo, agora = new Date())
   );
   return formatarSenha(criadas[0]);
 }
+
+function falha(status, mensagem) {
+  const erro = new Error(mensagem);
+  erro.status = status;
+  return erro;
+}
+
+async function transacao(operacao) {
+  const conexao = await obterPool().getConnection();
+  try {
+    await conexao.beginTransaction();
+    const resultado = await operacao(conexao);
+    await conexao.commit();
+    return resultado;
+  } catch (erro) {
+    await conexao.rollback();
+    throw erro;
+  } finally {
+    conexao.release();
+  }
+}
+
+async function obterSenha(conexao, numero) {
+  const [linhas] = await conexao.execute(
+    `SELECT ${COLUNAS} FROM senhas WHERE numero = ? FOR UPDATE`,
+    [numero]
+  );
+  if (!linhas.length) throw falha(404, "Senha não encontrada.");
+  return linhas[0];
+}
+
+async function lerSenha(conexao, numero) {
+  const [linhas] = await conexao.execute(
+    `SELECT ${COLUNAS} FROM senhas WHERE numero = ?`,
+    [numero]
+  );
+  return formatarSenha(linhas[0]);
+}
+
+export async function chamarProxima(guiche, atendente = "Atendente 01") {
+  if (!Number.isInteger(guiche) || guiche < 1 || guiche > 65535) {
+    throw falha(400, "Informe um guichê válido.");
+  }
+  return transacao((conexao) => chamarProximaNaTransacao(conexao, guiche, atendente));
+}
+
+export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Atendente 01") {
+  const [estados] = await conexao.execute(
+    "SELECT ultima_foi_sp, proximo_nao_sp, ordem_chamada FROM estado_fila WHERE id = 1 FOR UPDATE"
+  );
+  if (estados.length !== 1) throw new Error("Estado da fila não inicializado.");
+  const estado = estados[0];
+
+  const [ocupadas] = await conexao.execute(
+    "SELECT numero FROM senhas WHERE guiche = ? AND status IN ('CHAMADA', 'CHAMADA_NOVAMENTE', 'EM_ATENDIMENTO') LIMIT 1",
+    [guiche]
+  );
+  if (ocupadas.length) throw falha(409, "Este guichê já possui uma senha ativa.");
+
+  const hoje = dataLocal(new Date());
+  const [aguardando] = await conexao.execute(
+    "SELECT numero, tipo FROM senhas WHERE data_emissao = ? AND status = 'AGUARDANDO' ORDER BY sequencia, numero",
+    [hoje]
+  );
+  const sp = aguardando.find((senha) => senha.tipo === "SP");
+  const se = aguardando.find((senha) => senha.tipo === "SE");
+  const sg = aguardando.find((senha) => senha.tipo === "SG");
+  let proxima;
+  if (sp && !estado.ultima_foi_sp) {
+    proxima = sp;
+  } else {
+    proxima = estado.proximo_nao_sp === "SE" ? (se ?? sg) : (sg ?? se);
+    proxima ??= sp;
+  }
+  if (!proxima) throw falha(404, "Não há senhas aguardando.");
+
+  const ordem = Number(estado.ordem_chamada) + 1;
+  await conexao.execute(
+    "UPDATE senhas SET status = 'CHAMADA', guiche = ?, atendente = ?, chamadas = 1, primeira_chamada_em = ?, ordem_chamada = ? WHERE numero = ?",
+    [guiche, atendente, dataHoraMysql(new Date()), ordem, proxima.numero]
+  );
+  const ultimaFoiSp = proxima.tipo === "SP";
+  const proximoNaoSp = ultimaFoiSp ? estado.proximo_nao_sp : (proxima.tipo === "SE" ? "SG" : "SE");
+  await conexao.execute(
+    "UPDATE estado_fila SET ultima_foi_sp = ?, proximo_nao_sp = ?, ordem_chamada = ? WHERE id = 1",
+    [ultimaFoiSp, proximoNaoSp, ordem]
+  );
+  return lerSenha(conexao, proxima.numero);
+}
+
+export async function iniciarAtendimento(numero) {
+  return transacao((conexao) => iniciarAtendimentoNaTransacao(conexao, numero));
+}
+
+export async function iniciarAtendimentoNaTransacao(conexao, numero) {
+  const senha = await obterSenha(conexao, numero);
+  if (!["CHAMADA", "CHAMADA_NOVAMENTE"].includes(senha.status)) {
+    throw falha(409, "Esta senha não pode iniciar atendimento.");
+  }
+  await conexao.execute(
+    "UPDATE senhas SET status = 'EM_ATENDIMENTO', inicio_atendimento_em = ? WHERE numero = ?",
+    [dataHoraMysql(new Date()), numero]
+  );
+  return lerSenha(conexao, numero);
+}
+
+export async function finalizarAtendimento(numero) {
+  return transacao((conexao) => finalizarAtendimentoNaTransacao(conexao, numero));
+}
+
+export async function finalizarAtendimentoNaTransacao(conexao, numero) {
+  const senha = await obterSenha(conexao, numero);
+  if (senha.status !== "EM_ATENDIMENTO") {
+    throw falha(409, "Inicie o atendimento antes de finalizar.");
+  }
+  await conexao.execute(
+    "UPDATE senhas SET status = 'ATENDIDA', finalizacao_em = ? WHERE numero = ?",
+    [dataHoraMysql(new Date()), numero]
+  );
+  return lerSenha(conexao, numero);
+}
+
+export async function chamarNovamente(numero) {
+  return transacao((conexao) => chamarNovamenteNaTransacao(conexao, numero));
+}
+
+export async function chamarNovamenteNaTransacao(conexao, numero) {
+  const [estados] = await conexao.execute(
+    "SELECT ordem_chamada FROM estado_fila WHERE id = 1 FOR UPDATE"
+  );
+  if (estados.length !== 1) throw new Error("Estado da fila não inicializado.");
+  const senha = await obterSenha(conexao, numero);
+  if (senha.status !== "CHAMADA" || senha.chamadas !== 1) {
+    throw falha(409, "Esta senha não pode ser chamada novamente.");
+  }
+  const ordem = Number(estados[0].ordem_chamada) + 1;
+  await conexao.execute(
+    "UPDATE senhas SET status = 'CHAMADA_NOVAMENTE', chamadas = 2, segunda_chamada_em = ?, ordem_chamada = ? WHERE numero = ?",
+    [dataHoraMysql(new Date()), ordem, numero]
+  );
+  await conexao.execute("UPDATE estado_fila SET ordem_chamada = ? WHERE id = 1", [ordem]);
+  return lerSenha(conexao, numero);
+}
+
+export async function marcarNaoCompareceu(numero) {
+  return transacao((conexao) => marcarNaoCompareceuNaTransacao(conexao, numero));
+}
+
+export async function marcarNaoCompareceuNaTransacao(conexao, numero) {
+  const senha = await obterSenha(conexao, numero);
+  if (senha.status !== "CHAMADA_NOVAMENTE" || senha.chamadas !== 2) {
+    throw falha(409, "A senha precisa ter sido chamada duas vezes.");
+  }
+  await conexao.execute(
+    "UPDATE senhas SET status = 'NÃO_COMPARECEU', finalizacao_em = ? WHERE numero = ?",
+    [dataHoraMysql(new Date()), numero]
+  );
+  return lerSenha(conexao, numero);
+}
+
+export async function obterPainel() {
+  const [linhas] = await obterPool().execute(
+    `SELECT ${COLUNAS} FROM senhas WHERE ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 5`
+  );
+  const senhas = linhas.map(formatarSenha);
+  return { atual: senhas[0] ?? null, anteriores: senhas.slice(1) };
+}
