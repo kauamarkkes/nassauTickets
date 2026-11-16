@@ -34,6 +34,7 @@ export function obterPool() {
     user,
     password,
     database,
+    dateStrings: true,
     connectionLimit: 5,
     connectTimeout: 10000,
   });
