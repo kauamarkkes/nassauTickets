@@ -6,11 +6,15 @@ const links = [
   { nome: "Início", rota: "/" },
   { nome: "Totem", rota: "/totem" },
   { nome: "Painel", rota: "/painel" },
-  { nome: "Atendimento", rota: "/atendimento" },
 ];
 
-function Header() {
+function Header({ usuario, verificando, aoSair, saindo, erroSair }) {
   const [menuAberto, setMenuAberto] = useState(false);
+  const linksVisiveis = [
+    ...links,
+    ...(usuario ? [{ nome: "Atendimento", rota: "/atendimento" }] :
+      verificando ? [] : [{ nome: "Entrar", rota: "/login" }]),
+  ];
 
   return (
     <header className="nt-header">
@@ -39,7 +43,7 @@ function Header() {
           className={`nt-header__nav${menuAberto ? " is-open" : ""}`}
         >
           <ul className="nt-header__list">
-            {links.map(({ nome, rota }) => (
+            {linksVisiveis.map(({ nome, rota }) => (
               <li key={rota}>
                 <NavLink
                   to={rota}
@@ -52,9 +56,22 @@ function Header() {
                 </NavLink>
               </li>
             ))}
+            {usuario && (
+              <li>
+                <button
+                  type="button"
+                  className="nt-header__link nt-header__button"
+                  onClick={() => { setMenuAberto(false); aoSair(); }}
+                  disabled={saindo}
+                >
+                  {saindo ? "Saindo..." : "Sair"}
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
       </div>
+      {erroSair && <p className="nt-container" role="alert">{erroSair}</p>}
     </header>
   );
 }

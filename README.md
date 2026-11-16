@@ -278,7 +278,7 @@ NÃO_COMPARECEU
 
 As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
 
-O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página de login, a restauração de sessão e a rota protegida no React ainda precisam ser implementadas.
+O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página `/login` envia as credenciais à API e redireciona para `/atendimento`; o navegador envia o cookie nas requisições seguintes. Ao recarregar, o React consulta `/auth/session`, protege `/atendimento` e troca o link Entrar pelo botão Sair enquanto houver sessão. O botão Sair invalida a sessão no servidor.
 
 A numeração segue o formato:
 
@@ -304,7 +304,7 @@ A sequência é reiniciada de acordo com a data.
 
 * Melhorar filtros e ordenação das informações.
 * Evoluir a validação dos formulários.
-* Integrar login, restauração de sessão, logout e proteção de rota no React.
+* Tratar a expiração de sessão na tela de atendimento sem depender de recarregar a página.
 * Implementar relatórios e informações de auditoria mais completas.
 * Evoluir o controle de expediente.
 * Adicionar tratamento de falhas e cenários de indisponibilidade da API.
