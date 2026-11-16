@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { verificarConexao, encerrarPool } from "./db.js";
+import { redefinirSenhaAtendente } from "./auth/resetPassword.js";
 import {
   criarSessao, usuarioDaSessao, encerrarSessao,
   definirCookieSessao, limparCookieSessao,
@@ -85,6 +86,39 @@ app.post("/auth/logout", rota(async (req, res) => {
   await encerrarSessao(req);
   limparCookieSessao(res);
   return { dados: { mensagem: "Sessão encerrada." } };
+}));
+
+app.post("/auth/reset-test", rota(async (req) => {
+  const local = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(req.socket.remoteAddress);
+  const codigoConfigurado = process.env.TEST_RESET_CODE;
+  if (process.env.NODE_ENV === "production" || process.env.ENABLE_TEST_RESET !== "true" ||
+      !local || !/^\d{4}$/.test(codigoConfigurado ?? "")) {
+    const erro = new Error("Rota indisponível.");
+    erro.status = 404;
+    throw erro;
+  }
+  const { login, codigo, novaSenha } = req.body ?? {};
+  if (typeof login !== "string" || !/^[a-zA-Z0-9._-]{3,80}$/.test(login) ||
+      typeof novaSenha !== "string" || [...novaSenha].length < 12 ||
+      Buffer.byteLength(novaSenha, "utf8") > 1024) {
+    const erro = new Error("Informe um login e uma nova senha de pelo menos 12 caracteres.");
+    erro.status = 400;
+    throw erro;
+  }
+  if (codigo !== codigoConfigurado) {
+    const erro = new Error("Código de teste inválido.");
+    erro.status = 403;
+    throw erro;
+  }
+  try {
+    await redefinirSenhaAtendente(login, novaSenha, true);
+  } catch (erro) {
+    if (erro.code !== "ATENDENTE_NAO_ENCONTRADO") throw erro;
+    erro.status = 404;
+    erro.message = "Atendente ativo não encontrado.";
+    throw erro;
+  }
+  return { dados: { mensagem: "Senha redefinida. Entre com a nova senha." } };
 }));
 
 app.get("/senhas", rotaAutenticada(async () => ({ dados: await listarSenhas() })));

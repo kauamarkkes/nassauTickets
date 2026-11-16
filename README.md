@@ -128,6 +128,8 @@ Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco 
 | `DB_PASSWORD` | Senha do usuário MySQL | Obrigatório |
 | `DB_NAME` | Banco existente que será selecionado pelo pool | Obrigatório; exemplo: `nassauTickets` |
 | `FRONTEND_ORIGIN` | Origem permitida para o frontend e requisições com sessão | `http://localhost:5173` |
+| `ENABLE_TEST_RESET` | Habilita redefinição de senha apenas no servidor local de teste | `false` |
+| `TEST_RESET_CODE` | Código de redefinição do teste local; mantenha só no `.env` | vazio |
 
 Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
 
@@ -148,6 +150,16 @@ node --env-file=.env scripts/createAttendant.js atendente "Atendente 01"
 ```
 
 O comando pede a senha sem exibi-la e grava somente seu hash. Use pelo menos 12 caracteres. O terceiro argumento opcional é o perfil `GESTOR`; sem ele, o perfil é `ATENDENTE`. Não envie senhas ou hashes ao repositório.
+
+Se um atendente esquecer a senha, o responsável pelo banco pode redefini-la localmente, no mesmo terminal, sem precisar conhecer a senha antiga:
+
+```cmd
+node --env-file=.env scripts/createAttendant.js --reset atendente
+```
+
+O comando solicita e confirma uma nova senha de pelo menos 12 caracteres, substitui o hash da conta indicada e encerra suas sessões anteriores. O cadastro inicial também pede confirmação da senha. Essa opção pelo terminal continua disponível sem habilitar o modo de teste no navegador.
+
+Somente para testes locais, a opção **Esqueceu a senha?** abre `/redefinir-senha`. Para habilitá-la, defina `ENABLE_TEST_RESET=true` e `TEST_RESET_CODE` no `backend/.env` local. A rota `POST /auth/reset-test` aceita `{ "login", "codigo", "novaSenha" }`, substitui o hash e encerra as sessões do atendente. O backend só aceita essa rota de `localhost` e a desativa em produção, mesmo que as variáveis estejam presentes. Não coloque o código no repositório. Para uso real, a redefinição deve ser feita por um gestor autenticado ou por outro processo que confirme a identidade.
 
 Inicie o backend, ainda no diretório `backend/`:
 
@@ -207,6 +219,7 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | `POST`  | `/auth/login`                      | Autenticar atendente e criar sessão.            |
 | `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
 | `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
+| `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
 | `GET`   | `/senhas`                          | Listar todas as senhas.                        |
 | `POST`  | `/senhas`                          | Emitir uma nova senha.                         |
 | `POST`  | `/atendimentos/proxima`            | Chamar a próxima senha.                        |

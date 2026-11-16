@@ -4,6 +4,7 @@ import Painel from "../pages/Painel";
 import Attendant from "../pages/Attendant";
 import Totem from "../pages/Totem";
 import Login from "../pages/Login";
+import ResetTest from "../pages/ResetTest";
 
 function AppRoutes({ sessao, aoEntrar }) {
   const atendimento = sessao.verificando
@@ -24,6 +25,7 @@ function AppRoutes({ sessao, aoEntrar }) {
           : <Login aoEntrar={aoEntrar} />
       } />
       <Route path="/atendimento" element={atendimento} />
+      <Route path="/redefinir-senha" element={<ResetTest />} />
     </Routes>
   );
 }

@@ -270,6 +270,15 @@ body {
   outline-offset: 2px;
 }
 
+.login-ajuda {
+  margin-top: 20px;
+  color: var(--text-muted);
+}
+
+.login-ajuda summary {
+  cursor: pointer;
+}
+
 .atd-page {
   min-height: 100vh;
 }

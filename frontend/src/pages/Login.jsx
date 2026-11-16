@@ -69,6 +69,11 @@ function Login({ aoEntrar }) {
             {carregando ? "Entrando..." : "Entrar"}
           </Button>
         </form>
+        <details className="login-ajuda">
+          <summary>Esqueceu a senha?</summary>
+          <p>No ambiente local de teste, você pode usar o código de redefinição.</p>
+          <Button to="/redefinir-senha" variante="secondary">Redefinir senha</Button>
+        </details>
       </div>
     </main>
   );
