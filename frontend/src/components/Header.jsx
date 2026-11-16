@@ -14,6 +14,7 @@ function Header({ usuario, verificando, aoSair, saindo, erroSair }) {
     ...links,
     ...(usuario ? [{ nome: "Atendimento", rota: "/atendimento" }] :
       verificando ? [] : [{ nome: "Entrar", rota: "/login" }]),
+    ...(usuario?.perfil === "GESTOR" ? [{ nome: "Admin", rota: "/admin" }] : []),
   ];
 
   return (

@@ -11,7 +11,7 @@ Repositório: https://github.com/kauamarkkes/nassauTickets
 * **Período:** 2026.2
 * **Instituição:** UNINASSAU – Graças
 * **Professor:** João Ferreira da Silva Junior
-* **Entrega atual:** AV1
+* **Entrega atual:** AV2 (em desenvolvimento)
 
 ## Problema e público-alvo
 
@@ -42,6 +42,8 @@ O sistema é direcionado principalmente para laboratórios e ambientes de atendi
 * Contagem das senhas aguardando atendimento.
 * Comunicação entre as páginas React e a API Express.
 * Persistência das senhas em MySQL no backend.
+* Login de atendentes e gestores, com sessão e rotas protegidas.
+* Área de gestão com resumo do dia, cadastro de usuários, redefinição de senhas e ajuste da próxima chamada SE/SG.
 
 ## Rotas do frontend
 
@@ -51,6 +53,8 @@ O sistema é direcionado principalmente para laboratórios e ambientes de atendi
 | `/totem`       | Emissão de senhas     |
 | `/painel`      | Painel de chamadas    |
 | `/atendimento` | Terminal do atendente |
+| `/login`       | Login de atendentes e gestores |
+| `/admin`       | Gestão diária, usuários e fila (somente GESTOR) |
 
 ## Tecnologias e arquitetura
 
@@ -159,7 +163,9 @@ node --env-file=.env scripts/createAttendant.js --reset atendente
 
 O comando solicita e confirma uma nova senha de pelo menos 12 caracteres, substitui o hash da conta indicada e encerra suas sessões anteriores. O cadastro inicial também pede confirmação da senha. Essa opção pelo terminal continua disponível sem habilitar o modo de teste no navegador.
 
-Somente para testes locais, a opção **Esqueceu a senha?** abre `/redefinir-senha`. Para habilitá-la, defina `ENABLE_TEST_RESET=true` e `TEST_RESET_CODE` no `backend/.env` local. A rota `POST /auth/reset-test` aceita `{ "login", "codigo", "novaSenha" }`, substitui o hash e encerra as sessões do atendente. O backend só aceita essa rota de `localhost` e a desativa em produção, mesmo que as variáveis estejam presentes. Não coloque o código no repositório. Para uso real, a redefinição deve ser feita por um gestor autenticado ou por outro processo que confirme a identidade.
+Somente para testes locais, a opção **Esqueceu a senha?** abre `/redefinir-senha`. Para habilitá-la, defina `ENABLE_TEST_RESET=true` e `TEST_RESET_CODE` no `backend/.env` local. A rota `POST /auth/reset-test` aceita `{ "login", "codigo", "novaSenha" }`, substitui o hash e encerra as sessões do atendente. O backend só aceita essa rota de `localhost` e a desativa em produção, mesmo que as variáveis estejam presentes. Não coloque o código no repositório. No uso normal, um gestor autenticado pode redefinir a senha pela página `/admin`.
+
+Para abrir a área de gestão, cadastre o primeiro usuário com perfil `GESTOR` pelo script acima, passando `GESTOR` como terceiro argumento. Depois do login, o gestor pode cadastrar atendentes e outros gestores, redefinir senhas e consultar os números do dia. A redefinição encerra as sessões anteriores do usuário. Nenhuma senha é devolvida pela API.
 
 Inicie o backend, ainda no diretório `backend/`:
 
@@ -220,6 +226,12 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
 | `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
 | `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
+| `GET`   | `/admin/resumo`                    | Totais do dia e cinco últimas chamadas; somente GESTOR. |
+| `GET`   | `/admin/usuarios`                  | Listar usuários sem hashes; somente GESTOR. |
+| `POST`  | `/admin/usuarios`                  | Cadastrar usuário; somente GESTOR. |
+| `POST`  | `/admin/usuarios/redefinir-senha`  | Redefinir senha e encerrar sessões; somente GESTOR. |
+| `GET`   | `/admin/fila`                      | Consultar o próximo tipo não prioritário; somente GESTOR. |
+| `PUT`   | `/admin/fila`                      | Escolher SE ou SG como próximo tipo não prioritário; somente GESTOR. |
 | `GET`   | `/senhas`                          | Listar todas as senhas.                        |
 | `POST`  | `/senhas`                          | Emitir uma nova senha.                         |
 | `POST`  | `/atendimentos/proxima`            | Chamar a próxima senha.                        |
@@ -252,6 +264,8 @@ As rotas que utilizam `:numero` devem receber o número completo da senha, por e
 A API retorna respostas de erro em JSON para entradas inválidas, senha não encontrada, fila vazia ou ações incompatíveis com o estado atual da senha. `GET /senhas` e as operações de atendimento exigem sessão; a emissão no totem e o painel continuam públicos.
 
 O login recebe `{"login":"atendente","senha":"..."}` e, se válido, retorna `{"usuario":{"id":1,"login":"atendente","nome":"Atendente 01","perfil":"ATENDENTE"}}` com cookie de sessão `HttpOnly`, `SameSite=Lax` e duração de oito horas. O navegador deve enviar requisições com `credentials: "include"`; `/auth/session` devolve o mesmo objeto de usuário após recarregar a página. `/auth/logout` invalida a sessão no servidor. Credenciais inválidas ou sessão ausente retornam `401`; uma origem HTTP não permitida retorna `403`. O cookie recebe `Secure` quando `NODE_ENV=production`, exigindo HTTPS.
+
+As rotas `/admin/*` também exigem perfil `GESTOR` no servidor. Um atendente autenticado recebe `403`. O cadastro recebe `{ "login", "nome", "perfil", "senha" }`, com perfil `ATENDENTE` ou `GESTOR` e senha de pelo menos 12 caracteres. A redefinição recebe `{ "login", "novaSenha" }`. A configuração da fila recebe `{ "proximoNaoPrioritario": "SE" }` ou `SG`: ela escolhe o próximo tipo não prioritário, mantendo a alternância com SP e entre SE/SG nas chamadas seguintes.
 
 Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
 

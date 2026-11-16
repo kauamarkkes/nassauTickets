@@ -5,6 +5,7 @@ import Attendant from "../pages/Attendant";
 import Totem from "../pages/Totem";
 import Login from "../pages/Login";
 import ResetTest from "../pages/ResetTest";
+import Admin from "../pages/Admin";
 
 function AppRoutes({ sessao, aoEntrar }) {
   const atendimento = sessao.verificando
@@ -12,6 +13,13 @@ function AppRoutes({ sessao, aoEntrar }) {
     : sessao.usuario
       ? <Attendant />
       : <Navigate to="/login" replace />;
+  const admin = sessao.verificando
+    ? <p className="nt-container" role="status">Verificando sessão...</p>
+    : !sessao.usuario
+      ? <Navigate to="/login" replace />
+      : sessao.usuario.perfil === "GESTOR"
+        ? <Admin />
+        : <p className="nt-container" role="alert">Acesso reservado ao gestor.</p>;
 
   return (
     <Routes>
@@ -21,10 +29,11 @@ function AppRoutes({ sessao, aoEntrar }) {
       <Route path="/login" element={sessao.verificando
         ? <p className="nt-container" role="status">Verificando sessão...</p>
         : sessao.usuario
-          ? <Navigate to="/atendimento" replace />
+          ? <Navigate to={sessao.usuario.perfil === "GESTOR" ? "/admin" : "/atendimento"} replace />
           : <Login aoEntrar={aoEntrar} />
       } />
       <Route path="/atendimento" element={atendimento} />
+      <Route path="/admin" element={admin} />
       <Route path="/redefinir-senha" element={<ResetTest />} />
     </Routes>
   );

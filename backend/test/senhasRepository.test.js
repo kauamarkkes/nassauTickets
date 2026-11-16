@@ -19,7 +19,7 @@ test("emissão no MySQL preserva formato, sequência e dados após rollback", as
     const [antes] = await pool.execute("SELECT COUNT(*) AS total FROM senhas");
     await conexao.beginTransaction();
 
-    const agora = new Date(2026, 10, 16, 12);
+    const agora = new Date(2098, 0, 1, 12);
     const sp = await inserirSenhaNaTransacao(conexao, "SP", agora);
     const sg = await inserirSenhaNaTransacao(conexao, "SG", agora);
     const outroSp = await inserirSenhaNaTransacao(conexao, "SP", agora);
@@ -58,6 +58,10 @@ test("chamada, atendimento e ausência seguem os estados sem persistir dados de 
   const conexao = await pool.getConnection();
   try {
     await conexao.beginTransaction();
+    // Isola a ordem inicial do teste da preferência configurada pelo gestor.
+    await conexao.execute(
+      "UPDATE estado_fila SET ultima_foi_sp = FALSE, proximo_nao_sp = 'SE' WHERE id = 1"
+    );
     const agora = new Date(2099, 0, 1, 12);
     const sp = await inserirSenhaNaTransacao(conexao, "SP", agora);
     const se = await inserirSenhaNaTransacao(conexao, "SE", agora);

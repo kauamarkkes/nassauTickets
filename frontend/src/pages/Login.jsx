@@ -28,7 +28,7 @@ function Login({ aoEntrar }) {
       });
       setSenha("");
       aoEntrar(usuario);
-      navigate("/atendimento", { replace: true });
+      navigate(usuario.perfil === "GESTOR" ? "/admin" : "/atendimento", { replace: true });
     } catch (falha) {
       setErro(falha.message);
     } finally {

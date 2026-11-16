@@ -3,6 +3,10 @@ import cors from "cors";
 import { verificarConexao, encerrarPool } from "./db.js";
 import { redefinirSenhaAtendente } from "./auth/resetPassword.js";
 import {
+  obterResumoDia, listarUsuarios, criarUsuario, redefinirSenhaUsuario,
+  obterOrdemFila, definirOrdemFila,
+} from "./adminRepository.js";
+import {
   criarSessao, usuarioDaSessao, encerrarSessao,
   definirCookieSessao, limparCookieSessao,
 } from "./auth/session.js";
@@ -57,6 +61,17 @@ function rotaAutenticada(operacao) {
     if (!req.usuario) {
       const erro = new Error("Autenticação necessária.");
       erro.status = 401;
+      throw erro;
+    }
+    return operacao(req, res);
+  });
+}
+
+function rotaGestor(operacao) {
+  return rotaAutenticada(async (req, res) => {
+    if (req.usuario.perfil !== "GESTOR") {
+      const erro = new Error("Acesso reservado ao gestor.");
+      erro.status = 403;
       throw erro;
     }
     return operacao(req, res);
@@ -120,6 +135,19 @@ app.post("/auth/reset-test", rota(async (req) => {
   }
   return { dados: { mensagem: "Senha redefinida. Entre com a nova senha." } };
 }));
+
+app.get("/admin/resumo", rotaGestor(async () => ({ dados: await obterResumoDia() })));
+app.get("/admin/usuarios", rotaGestor(async () => ({ dados: await listarUsuarios() })));
+app.post("/admin/usuarios", rotaGestor(async (req) => ({
+  status: 201, dados: await criarUsuario(req.body),
+})));
+app.post("/admin/usuarios/redefinir-senha", rotaGestor(async (req) => ({
+  dados: await redefinirSenhaUsuario(req.body),
+})));
+app.get("/admin/fila", rotaGestor(async () => ({ dados: await obterOrdemFila() })));
+app.put("/admin/fila", rotaGestor(async (req) => ({
+  dados: await definirOrdemFila(req.body?.proximoNaoPrioritario),
+})));
 
 app.get("/senhas", rotaAutenticada(async () => ({ dados: await listarSenhas() })));
 

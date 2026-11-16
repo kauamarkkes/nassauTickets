@@ -39,6 +39,9 @@ test("API lê o MySQL e preserva respostas sem gravar dados de teste", async () 
     const senhas = await fetch(`${url}/senhas`);
     assert.equal(senhas.status, 401);
 
+    const admin = await fetch(`${url}/admin/resumo`);
+    assert.equal(admin.status, 401);
+
     const painel = await fetch(`${url}/painel`);
     assert.equal(painel.status, 200);
     assert.ok(Array.isArray((await painel.json()).anteriores));
