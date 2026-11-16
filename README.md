@@ -117,7 +117,7 @@ copy .env.example .env
 
 No PowerShell, o equivalente à cópia é `Copy-Item .env.example .env`. Se a política do PowerShell bloquear `npm`, utilize `npm.cmd` nos comandos.
 
-Edite `backend/.env` localmente e informe o usuário e a senha do MySQL. Não envie esse arquivo ou suas credenciais ao GitHub ou à conversa.
+Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco MySQL. Se o arquivo já existir, adicione `DB_NAME=nassauTickets`, preservando as credenciais existentes. Não envie esse arquivo ou suas credenciais ao GitHub ou à conversa.
 
 | Variável | Finalidade | Padrão |
 | --- | --- | --- |
@@ -126,8 +126,17 @@ Edite `backend/.env` localmente e informe o usuário e a senha do MySQL. Não en
 | `DB_PORT` | Porta do MySQL (1 a 65535) | `3306` |
 | `DB_USER` | Usuário MySQL com acesso ao servidor | Obrigatório |
 | `DB_PASSWORD` | Senha do usuário MySQL | Obrigatório |
+| `DB_NAME` | Banco existente que será selecionado pelo pool | Obrigatório; exemplo: `nassauTickets` |
 
 Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
+
+Antes da primeira execução, crie o banco vazio pelo editor SQL do MySQL Workbench, conectado ao mesmo servidor configurado no `.env`:
+
+```sql
+CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
+```
+
+Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
 
 Inicie o backend, ainda no diretório `backend/`:
 
@@ -135,7 +144,7 @@ Inicie o backend, ainda no diretório `backend/`:
 npm run dev
 ```
 
-O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. Antes de abrir a porta HTTP, executa `SELECT 1` para validar acesso ao servidor MySQL. Nesta etapa, nenhum banco/schema é selecionado e nenhuma tabela é criada. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
+O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, executa `SELECT 1` para validar a conexão; se o banco não existir ou não puder ser acessado, a inicialização falha. Nenhuma tabela é criada nesta etapa. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
 
 Com a conexão validada, a API ficará disponível em:
 
@@ -153,9 +162,11 @@ Para verificar manualmente, abra `http://localhost:3000/`: a resposta deve conti
 
 Se o MySQL estiver indisponível ou as credenciais forem inválidas, a API não abrirá a porta HTTP e o processo terminará com erro. No modo de desenvolvimento, o Nodemon poderá permanecer aguardando alterações; após corrigir o ambiente, reinicie o comando. O log mostra o código do erro sem exibir as credenciais:
 
-- `DB_CONFIG_INVALID`: preencha usuário e senha e confira a porta MySQL.
+- `DB_CONFIG_INVALID`: preencha usuário, senha e nome do banco e confira a porta MySQL.
 - `ECONNREFUSED`: confirme que o MySQL está iniciado e ouvindo no endereço e porta configurados.
 - `ER_ACCESS_DENIED_ERROR`: confira usuário, senha e permissão de acesso a partir deste computador.
+- `ER_BAD_DB_ERROR`: confira `DB_NAME` e se o banco existe no servidor configurado.
+- `ER_DBACCESS_DENIED_ERROR`: confira a permissão do usuário para acessar o banco selecionado.
 - `ENOTFOUND` ou `ETIMEDOUT`: confira endereço, rede e disponibilidade do servidor.
 - `EADDRINUSE`: a porta HTTP já está sendo usada por outro processo.
 

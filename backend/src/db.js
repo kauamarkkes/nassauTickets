@@ -10,28 +10,30 @@ export function obterPool() {
   const port = Number(portaTexto);
   const user = process.env.DB_USER;
   const password = process.env.DB_PASSWORD;
+  const database = process.env.DB_NAME?.trim();
 
   if (
     !user?.trim() ||
     !password ||
+    !database ||
     !/^\d+$/.test(portaTexto) ||
     !Number.isInteger(port) ||
     port < 1 ||
     port > 65535
   ) {
     const erro = new Error(
-      "Defina DB_USER, DB_PASSWORD e uma DB_PORT válida (1 a 65535)."
+      "Defina DB_USER, DB_PASSWORD, DB_NAME e uma DB_PORT válida (1 a 65535)."
     );
     erro.code = "DB_CONFIG_INVALID";
     throw erro;
   }
 
-  // Sem database: esta etapa valida somente o acesso ao servidor MySQL.
   pool = mysql.createPool({
     host,
     port,
     user,
     password,
+    database,
     connectionLimit: 5,
     connectTimeout: 10000,
   });
