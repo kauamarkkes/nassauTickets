@@ -138,13 +138,15 @@ CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
 
 Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
 
+Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC. Nesta etapa, os endpoints ainda usam `backend/data/senhas.json`; as tabelas preparam a migração, mas ainda não recebem senhas pela API.
+
 Inicie o backend, ainda no diretório `backend/`:
 
 ```cmd
 npm run dev
 ```
 
-O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, executa `SELECT 1` para validar a conexão; se o banco não existir ou não puder ser acessado, a inicialização falha. Nenhuma tabela é criada nesta etapa. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
+O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, executa `SELECT 1` para validar a conexão; se o banco não existir ou não puder ser acessado, a inicialização falha. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
 
 Com a conexão validada, a API ficará disponível em:
 
