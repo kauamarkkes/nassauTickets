@@ -152,7 +152,7 @@ export async function chamarProxima(guiche, atendente = "Atendente 01") {
   return transacao((conexao) => chamarProximaNaTransacao(conexao, guiche, atendente));
 }
 
-export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Atendente 01") {
+export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Atendente 01", agora = new Date()) {
   const [estados] = await conexao.execute(
     "SELECT ultima_foi_sp, proximo_nao_sp, ordem_chamada FROM estado_fila WHERE id = 1 FOR UPDATE"
   );
@@ -165,7 +165,7 @@ export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Ate
   );
   if (ocupadas.length) throw falha(409, "Este guichê já possui uma senha ativa.");
 
-  const hoje = dataLocal(new Date());
+  const hoje = dataLocal(agora);
   const [aguardando] = await conexao.execute(
     "SELECT numero, tipo FROM senhas WHERE data_emissao = ? AND status = 'AGUARDANDO' ORDER BY sequencia, numero",
     [hoje]

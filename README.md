@@ -262,6 +262,8 @@ NÃO_COMPARECEU
 
 As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
 
+O módulo `backend/src/auth/password.js` prepara a autenticação de atendentes: gera hashes de senha com `scrypt` e salt aleatório e verifica uma senha informada contra o hash armazenado. Ainda não há tabela de atendentes, cadastro, endpoint de login ou sessão; nenhum usuário é criado automaticamente.
+
 A numeração segue o formato:
 
 ```text

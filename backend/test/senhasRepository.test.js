@@ -58,15 +58,15 @@ test("chamada, atendimento e ausência seguem os estados sem persistir dados de 
   const conexao = await pool.getConnection();
   try {
     await conexao.beginTransaction();
-    const agora = new Date();
+    const agora = new Date(2099, 0, 1, 12);
     const sp = await inserirSenhaNaTransacao(conexao, "SP", agora);
     const se = await inserirSenhaNaTransacao(conexao, "SE", agora);
     const sg = await inserirSenhaNaTransacao(conexao, "SG", agora);
 
-    const primeira = await chamarProximaNaTransacao(conexao, 60001, "Teste");
+    const primeira = await chamarProximaNaTransacao(conexao, 60001, "Teste", agora);
     assert.equal(primeira.numero, sp.numero);
     assert.equal(primeira.status, "CHAMADA");
-    await assert.rejects(chamarProximaNaTransacao(conexao, 60001, "Teste"), {
+    await assert.rejects(chamarProximaNaTransacao(conexao, 60001, "Teste", agora), {
       status: 409,
     });
     const iniciada = await iniciarAtendimentoNaTransacao(conexao, sp.numero);
@@ -74,14 +74,14 @@ test("chamada, atendimento e ausência seguem os estados sem persistir dados de 
     const finalizada = await finalizarAtendimentoNaTransacao(conexao, sp.numero);
     assert.equal(finalizada.status, "ATENDIDA");
 
-    const segunda = await chamarProximaNaTransacao(conexao, 60002, "Teste");
+    const segunda = await chamarProximaNaTransacao(conexao, 60002, "Teste", agora);
     assert.equal(segunda.numero, se.numero);
     const rechamada = await chamarNovamenteNaTransacao(conexao, se.numero);
     assert.equal(rechamada.chamadas, 2);
     assert.equal(rechamada.status, "CHAMADA_NOVAMENTE");
     const ausente = await marcarNaoCompareceuNaTransacao(conexao, se.numero);
     assert.equal(ausente.status, "NÃO_COMPARECEU");
-    const terceira = await chamarProximaNaTransacao(conexao, 60003, "Teste");
+    const terceira = await chamarProximaNaTransacao(conexao, 60003, "Teste", agora);
     assert.equal(terceira.numero, sg.numero);
   } finally {
     try {
