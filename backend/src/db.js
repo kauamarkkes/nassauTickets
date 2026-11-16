@@ -44,6 +44,14 @@ export function obterPool() {
 
 export async function verificarConexao() {
   await obterPool().execute("SELECT 1");
+  const [estado] = await obterPool().execute(
+    "SELECT id FROM estado_fila WHERE id = 1"
+  );
+  if (estado.length !== 1) {
+    const erro = new Error("Estado da fila não inicializado.");
+    erro.code = "DB_SCHEMA_INVALID";
+    throw erro;
+  }
 }
 
 export async function encerrarPool() {

@@ -41,7 +41,7 @@ O sistema é direcionado principalmente para laboratórios e ambientes de atendi
 * Painel com a chamada atual e as últimas chamadas.
 * Contagem das senhas aguardando atendimento.
 * Comunicação entre as páginas React e a API Express.
-* Persistência das senhas em arquivo JSON no backend.
+* Persistência das senhas em MySQL no backend.
 
 ## Rotas do frontend
 
@@ -56,13 +56,13 @@ O sistema é direcionado principalmente para laboratórios e ambientes de atendi
 
 * **Frontend:** React, JavaScript, Vite, React Router e CSS.
 * **Backend:** Node.js, Express e CORS.
-* **Persistência:** arquivo JSON no backend.
+* **Persistência:** MySQL 8.0 no backend.
 * **Comunicação:** API REST utilizando `fetch`.
 * **Desenvolvimento:** Nodemon, npm, Git e GitHub.
 
 O frontend realiza requisições HTTP para a API Express. O backend controla a fila, as chamadas, os estados das senhas e a persistência dos dados.
 
-A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`, enquanto o `server.js` é responsável pelas regras e operações da API.
+A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`. O `server.js` expõe a API e `senhasRepository.js` executa as operações no MySQL.
 
 ## Estrutura do repositório
 
@@ -70,7 +70,7 @@ A comunicação entre frontend e backend é centralizada pelos arquivos `api.js`
 nassauTickets/
 ├── backend/
 │   ├── data/
-│   │   └── senhas.json
+│   │   └── senhas.json (legado, não utilizado pela API)
 │   └── src/
 │       └── server.js
 ├── docs/
@@ -138,7 +138,7 @@ CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
 
 Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
 
-Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC. O módulo `backend/src/senhasRepository.js` prepara emissão, listagem, chamada, atendimento e painel no MySQL, mas ainda não está conectado aos endpoints. A API continua usando `backend/data/senhas.json` até a troca conjunta de todas as rotas. Execute `npm test` em `backend/` para verificar o repositório em transações que são desfeitas ao final.
+Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC. Execute `npm test` em `backend/` para verificar o repositório em transações que são desfeitas ao final.
 
 Inicie o backend, ainda no diretório `backend/`:
 
@@ -146,7 +146,7 @@ Inicie o backend, ainda no diretório `backend/`:
 npm run dev
 ```
 
-O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, executa `SELECT 1` para validar a conexão; se o banco não existir ou não puder ser acessado, a inicialização falha. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
+O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, confirma a conexão e a linha de controle da fila. Se o banco ou o esquema não estiver pronto, a inicialização falha. Todas as rotas de senhas e atendimento usam MySQL.
 
 Com a conexão validada, a API ficará disponível em:
 
@@ -260,15 +260,7 @@ NÃO_COMPARECEU
 
 ## Dados e persistência
 
-As senhas são controladas pelo backend e armazenadas no arquivo:
-
-```text
-backend/data/senhas.json
-```
-
-O arquivo mantém as senhas emitidas e as informações necessárias para controlar a sequência da fila.
-
-A API carrega os dados do arquivo quando o servidor é iniciado e grava as alterações realizadas durante a execução. Dessa forma, as senhas permanecem armazenadas mesmo após o reinício do servidor.
+As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
 
 A numeração segue o formato:
 
