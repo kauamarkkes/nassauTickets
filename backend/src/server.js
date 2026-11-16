@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import { verificarConexao, encerrarPool } from "./db.js";
 import {
+  criarSessao, usuarioDaSessao, encerrarSessao,
+  definirCookieSessao, limparCookieSessao,
+} from "./auth/session.js";
+import {
   listarSenhas,
   emitirSenha,
   chamarProxima,
@@ -14,14 +18,24 @@ import {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(express.json());
+app.use((req, res, next) => {
+  const origem = req.get("Origin");
+  const mesmaOrigem = origem === `${req.protocol}://${req.get("host")}`;
+  if (!["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+      origem && origem !== FRONTEND_ORIGIN && !mesmaOrigem) {
+    return res.status(403).json({ erro: "Origem não permitida." });
+  }
+  next();
+});
 
 function rota(operacao) {
   return async (req, res) => {
     try {
-      const { status = 200, dados } = await operacao(req);
+      const { status = 200, dados } = await operacao(req, res);
       res.status(status).json(dados);
     } catch (erro) {
       const status = erro.status ?? (erro.code === "TIPO_INVALIDO" ? 400 : erro.code === "LIMITE_DIARIO" ? 409 : 500);
@@ -36,34 +50,67 @@ function rota(operacao) {
   };
 }
 
+function rotaAutenticada(operacao) {
+  return rota(async (req, res) => {
+    req.usuario = await usuarioDaSessao(req);
+    if (!req.usuario) {
+      const erro = new Error("Autenticação necessária.");
+      erro.status = 401;
+      throw erro;
+    }
+    return operacao(req, res);
+  });
+}
+
 app.get("/", (_req, res) => {
   res.json({ mensagem: "API nassauTickets funcionando" });
 });
 
-app.get("/senhas", rota(async () => ({ dados: await listarSenhas() })));
+app.post("/auth/login", rota(async (req, res) => {
+  const sessao = await criarSessao(req.body?.login, req.body?.senha);
+  if (!sessao) {
+    const erro = new Error("Credenciais inválidas.");
+    erro.status = 401;
+    throw erro;
+  }
+  definirCookieSessao(res, sessao.token);
+  return { dados: { usuario: sessao.usuario } };
+}));
+
+app.get("/auth/session", rotaAutenticada(async (req) => ({
+  dados: { usuario: req.usuario },
+})));
+
+app.post("/auth/logout", rota(async (req, res) => {
+  await encerrarSessao(req);
+  limparCookieSessao(res);
+  return { dados: { mensagem: "Sessão encerrada." } };
+}));
+
+app.get("/senhas", rotaAutenticada(async () => ({ dados: await listarSenhas() })));
 
 app.post("/senhas", rota(async (req) => ({
   status: 201,
   dados: await emitirSenha(req.body?.tipo),
 })));
 
-app.post("/atendimentos/proxima", rota(async (req) => ({
-  dados: await chamarProxima(req.body?.guiche, req.body?.atendente ?? "Atendente 01"),
+app.post("/atendimentos/proxima", rotaAutenticada(async (req) => ({
+  dados: await chamarProxima(req.body?.guiche, req.usuario.nome),
 })));
 
-app.patch("/senhas/:numero/iniciar", rota(async (req) => ({
+app.patch("/senhas/:numero/iniciar", rotaAutenticada(async (req) => ({
   dados: await iniciarAtendimento(req.params.numero),
 })));
 
-app.patch("/senhas/:numero/finalizar", rota(async (req) => ({
+app.patch("/senhas/:numero/finalizar", rotaAutenticada(async (req) => ({
   dados: await finalizarAtendimento(req.params.numero),
 })));
 
-app.post("/senhas/:numero/chamar-novamente", rota(async (req) => ({
+app.post("/senhas/:numero/chamar-novamente", rotaAutenticada(async (req) => ({
   dados: await chamarNovamente(req.params.numero),
 })));
 
-app.patch("/senhas/:numero/nao-compareceu", rota(async (req) => ({
+app.patch("/senhas/:numero/nao-compareceu", rotaAutenticada(async (req) => ({
   dados: await marcarNaoCompareceu(req.params.numero),
 })));
 

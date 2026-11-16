@@ -37,8 +37,7 @@ test("API lê o MySQL e preserva respostas sem gravar dados de teste", async () 
     assert.deepEqual(await raiz.json(), { mensagem: "API nassauTickets funcionando" });
 
     const senhas = await fetch(`${url}/senhas`);
-    assert.equal(senhas.status, 200);
-    assert.ok(Array.isArray(await senhas.json()));
+    assert.equal(senhas.status, 401);
 
     const painel = await fetch(`${url}/painel`);
     assert.equal(painel.status, 200);
@@ -50,8 +49,26 @@ test("API lê o MySQL e preserva respostas sem gravar dados de teste", async () 
     });
     assert.equal(invalida.status, 400);
 
-    const ausente = await fetch(`${url}/senhas/000000-SP000/iniciar`, { method: "PATCH" });
-    assert.equal(ausente.status, 404);
+    const sessao = await fetch(`${url}/auth/session`);
+    assert.equal(sessao.status, 401);
+
+    const login = await fetch(`${url}/auth/login`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ login: "inexistente", senha: "senha errada" }),
+    });
+    assert.equal(login.status, 401);
+
+    const protegido = await fetch(`${url}/senhas/000000-SP000/iniciar`, { method: "PATCH" });
+    assert.equal(protegido.status, 401);
+
+    const origemIndevida = await fetch(`${url}/auth/logout`, {
+      method: "POST", headers: { Origin: "https://example.invalid" },
+    });
+    assert.equal(origemIndevida.status, 403);
+
+    const logout = await fetch(`${url}/auth/logout`, { method: "POST" });
+    assert.equal(logout.status, 200);
+    assert.match(logout.headers.get("set-cookie"), /Max-Age=0/);
   } finally {
     if (filho.connected) filho.send("stop");
     await terminou;

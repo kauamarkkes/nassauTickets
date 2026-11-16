@@ -127,6 +127,7 @@ Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco 
 | `DB_USER` | Usuário MySQL com acesso ao servidor | Obrigatório |
 | `DB_PASSWORD` | Senha do usuário MySQL | Obrigatório |
 | `DB_NAME` | Banco existente que será selecionado pelo pool | Obrigatório; exemplo: `nassauTickets` |
+| `FRONTEND_ORIGIN` | Origem permitida para o frontend e requisições com sessão | `http://localhost:5173` |
 
 Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
 
@@ -139,6 +140,14 @@ CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
 Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
 
 Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC. Execute `npm test` em `backend/` para verificar o repositório em transações que são desfeitas ao final.
+
+Execute também `docs/mer/002_autenticacao.sql` para criar `atendentes` e `sessoes_atendentes`. O servidor exige essas tabelas para iniciar. Para cadastrar o primeiro atendente, execute em um terminal interativo dentro de `backend/`:
+
+```cmd
+node --env-file=.env scripts/createAttendant.js atendente "Atendente 01"
+```
+
+O comando pede a senha sem exibi-la e grava somente seu hash. Use pelo menos 12 caracteres. O terceiro argumento opcional é o perfil `GESTOR`; sem ele, o perfil é `ATENDENTE`. Não envie senhas ou hashes ao repositório.
 
 Inicie o backend, ainda no diretório `backend/`:
 
@@ -195,6 +204,9 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | Método  | Rota                               | Finalidade                                     |
 | ------- | ---------------------------------- | ---------------------------------------------- |
 | `GET`   | `/`                                | Verificar se a API está funcionando.           |
+| `POST`  | `/auth/login`                      | Autenticar atendente e criar sessão.            |
+| `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
+| `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
 | `GET`   | `/senhas`                          | Listar todas as senhas.                        |
 | `POST`  | `/senhas`                          | Emitir uma nova senha.                         |
 | `POST`  | `/atendimentos/proxima`            | Chamar a próxima senha.                        |
@@ -224,7 +236,11 @@ As rotas que utilizam `:numero` devem receber o número completo da senha, por e
 /senhas/261004-SP001/iniciar
 ```
 
-A API retorna respostas de erro em JSON para entradas inválidas, senha não encontrada, fila vazia ou ações incompatíveis com o estado atual da senha.
+A API retorna respostas de erro em JSON para entradas inválidas, senha não encontrada, fila vazia ou ações incompatíveis com o estado atual da senha. `GET /senhas` e as operações de atendimento exigem sessão; a emissão no totem e o painel continuam públicos.
+
+O login recebe `{"login":"atendente","senha":"..."}` e, se válido, retorna `{"usuario":{"id":1,"login":"atendente","nome":"Atendente 01","perfil":"ATENDENTE"}}` com cookie de sessão `HttpOnly`, `SameSite=Lax` e duração de oito horas. O navegador deve enviar requisições com `credentials: "include"`; `/auth/session` devolve o mesmo objeto de usuário após recarregar a página. `/auth/logout` invalida a sessão no servidor. Credenciais inválidas ou sessão ausente retornam `401`; uma origem HTTP não permitida retorna `403`. O cookie recebe `Secure` quando `NODE_ENV=production`, exigindo HTTPS.
+
+Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
 
 ## Regras de atendimento
 
@@ -262,7 +278,7 @@ NÃO_COMPARECEU
 
 As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
 
-O módulo `backend/src/auth/password.js` prepara a autenticação de atendentes: gera hashes de senha com `scrypt` e salt aleatório e verifica uma senha informada contra o hash armazenado. Ainda não há tabela de atendentes, cadastro, endpoint de login ou sessão; nenhum usuário é criado automaticamente.
+O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página de login, a restauração de sessão e a rota protegida no React ainda precisam ser implementadas.
 
 A numeração segue o formato:
 
@@ -288,8 +304,7 @@ A sequência é reiniciada de acordo com a data.
 
 * Melhorar filtros e ordenação das informações.
 * Evoluir a validação dos formulários.
-* Implementar autenticação e controle de acesso.
-* Adicionar gerenciamento de sessão.
+* Integrar login, restauração de sessão, logout e proteção de rota no React.
 * Implementar relatórios e informações de auditoria mais completas.
 * Evoluir o controle de expediente.
 * Adicionar tratamento de falhas e cenários de indisponibilidade da API.

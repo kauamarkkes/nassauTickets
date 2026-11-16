@@ -52,6 +52,8 @@ export async function verificarConexao() {
     erro.code = "DB_SCHEMA_INVALID";
     throw erro;
   }
+  await obterPool().execute("SELECT id FROM atendentes LIMIT 1");
+  await obterPool().execute("SELECT token_hash FROM sessoes_atendentes LIMIT 1");
 }
 
 export async function encerrarPool() {
