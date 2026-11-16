@@ -98,7 +98,7 @@ As pastas de documentação vazias devem conter `.gitkeep` para aparecerem no Gi
 
 ## Instalação e execução
 
-É necessário ter Node.js, npm e Git instalados. O frontend e o backend devem rodar em **terminais separados**.
+É necessário ter Node.js 22.9 ou superior da linha 22 LTS, npm, Git e acesso a um servidor MySQL 8.0 em execução. O frontend e o backend devem rodar em **terminais separados**.
 
 Clone o repositório:
 
@@ -107,15 +107,37 @@ git clone https://github.com/kauamarkkes/nassauTickets.git
 cd nassauTickets
 ```
 
-No primeiro terminal, inicie o backend:
+No primeiro terminal, instale as dependências do backend e copie o exemplo de configuração:
 
 ```cmd
 cd backend
 npm install
+copy .env.example .env
+```
+
+No PowerShell, o equivalente à cópia é `Copy-Item .env.example .env`. Se a política do PowerShell bloquear `npm`, utilize `npm.cmd` nos comandos.
+
+Edite `backend/.env` localmente e informe o usuário e a senha do MySQL. Não envie esse arquivo ou suas credenciais ao GitHub ou à conversa.
+
+| Variável | Finalidade | Padrão |
+| --- | --- | --- |
+| `PORT` | Porta HTTP do Express | `3000` |
+| `DB_HOST` | Endereço do servidor MySQL | `127.0.0.1` |
+| `DB_PORT` | Porta do MySQL (1 a 65535) | `3306` |
+| `DB_USER` | Usuário MySQL com acesso ao servidor | Obrigatório |
+| `DB_PASSWORD` | Senha do usuário MySQL | Obrigatório |
+
+Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
+
+Inicie o backend, ainda no diretório `backend/`:
+
+```cmd
 npm run dev
 ```
 
-A API ficará disponível em:
+O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. Antes de abrir a porta HTTP, executa `SELECT 1` para validar acesso ao servidor MySQL. Nesta etapa, nenhum banco/schema é selecionado e nenhuma tabela é criada. As senhas de atendimento continuam em `backend/data/senhas.json`; a migração da persistência será uma tarefa posterior.
+
+Com a conexão validada, a API ficará disponível em:
 
 ```text
 http://localhost:3000
@@ -126,6 +148,16 @@ Também é possível iniciar o backend com:
 ```cmd
 npm start
 ```
+
+Para verificar manualmente, abra `http://localhost:3000/`: a resposta deve continuar sendo `{"mensagem":"API nassauTickets funcionando"}`. Encerre com `Ctrl+C` para fechar o servidor HTTP e o pool MySQL.
+
+Se o MySQL estiver indisponível ou as credenciais forem inválidas, a API não abrirá a porta HTTP e o processo terminará com erro. No modo de desenvolvimento, o Nodemon poderá permanecer aguardando alterações; após corrigir o ambiente, reinicie o comando. O log mostra o código do erro sem exibir as credenciais:
+
+- `DB_CONFIG_INVALID`: preencha usuário e senha e confira a porta MySQL.
+- `ECONNREFUSED`: confirme que o MySQL está iniciado e ouvindo no endereço e porta configurados.
+- `ER_ACCESS_DENIED_ERROR`: confira usuário, senha e permissão de acesso a partir deste computador.
+- `ENOTFOUND` ou `ETIMEDOUT`: confira endereço, rede e disponibilidade do servidor.
+- `EADDRINUSE`: a porta HTTP já está sendo usada por outro processo.
 
 No segundo terminal, a partir da raiz `nassauTickets`, inicie o frontend:
 

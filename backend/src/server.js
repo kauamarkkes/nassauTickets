@@ -3,6 +3,7 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { verificarConexao, encerrarPool } from "./db.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -380,12 +381,63 @@ app.get("/painel", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(
-    `Servidor rodando em http://localhost:${PORT}`
-  );
+let servidor;
+let encerrando = false;
 
-  console.log(
-    `Dados salvos em: ${DATA_FILE}`
-  );
+async function encerrar() {
+  if (encerrando) return;
+  encerrando = true;
+
+  try {
+    if (servidor?.listening) {
+      await new Promise((resolve, reject) => {
+        servidor.close((erro) => (erro ? reject(erro) : resolve()));
+      });
+    }
+  } finally {
+    await encerrarPool();
+  }
+}
+
+function informarErro(erro) {
+  // Não registrar o objeto do erro: ele pode conter dados da conexão.
+  console.error(`Falha no servidor (${erro.code || "ERRO_DESCONHECIDO"}).`);
+  if (erro.code === "DB_CONFIG_INVALID") {
+    console.error(erro.message);
+  } else {
+    console.error("Verifique o MySQL, as variáveis de ambiente e a porta HTTP.");
+  }
+}
+
+async function iniciar() {
+  try {
+    await verificarConexao();
+    if (encerrando) return;
+
+    console.log("Conexão com o servidor MySQL verificada.");
+    await new Promise((resolve, reject) => {
+      servidor = app.listen(PORT, (erro) => (erro ? reject(erro) : resolve()));
+    });
+
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+    console.log(`Dados salvos em: ${DATA_FILE}`);
+  } catch (erro) {
+    informarErro(erro);
+    process.exitCode = 1;
+    await encerrar();
+  }
+}
+
+for (const sinal of ["SIGINT", "SIGTERM"]) {
+  process.on(sinal, () => {
+    encerrar().catch((erro) => {
+      informarErro(erro);
+      process.exitCode = 1;
+    });
+  });
+}
+
+iniciar().catch((erro) => {
+  informarErro(erro);
+  process.exitCode = 1;
 });
