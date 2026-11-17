@@ -17,9 +17,11 @@ function Card({
   descricao,
   children,
   rodape,
+  nivelTitulo = 3,
   className = "",
   ...rest
 }) {
+  const Titulo = `h${nivelTitulo}`;
   return (
     <Tag className={["nt-card", className].filter(Boolean).join(" ")} {...rest}>
       {(rotulo || sigla) && (
@@ -28,7 +30,7 @@ function Card({
           {sigla && <span className="nt-card__badge">{sigla}</span>}
         </div>
       )}
-      {titulo && <h3 className="nt-card__title">{titulo}</h3>}
+      {titulo && <Titulo className="nt-card__title">{titulo}</Titulo>}
       {descricao && <p className="nt-card__description">{descricao}</p>}
       {children && <div className="nt-card__body">{children}</div>}
       {rodape && <div className="nt-card__footer">{rodape}</div>}

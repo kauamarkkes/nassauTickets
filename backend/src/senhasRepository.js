@@ -97,7 +97,7 @@ export async function inserirSenhaNaTransacao(conexao, tipo, agora = new Date())
 
   const numero = `${data}-${tipo}${String(sequencia).padStart(3, "0")}`;
   await conexao.execute(
-    "INSERT INTO senhas (numero, data_emissao, tipo, sequencia, emitida_em) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO senhas (numero, data_emissao, tipo, sequencia, status, emitida_em) VALUES (?, ?, ?, ?, 'AGUARDANDO', ?)",
     [numero, data, tipo, sequencia, dataHoraMysql(agora)]
   );
   const [criadas] = await conexao.execute(
@@ -167,7 +167,7 @@ export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Ate
 
   const hoje = dataLocal(agora);
   const [aguardando] = await conexao.execute(
-    "SELECT numero, tipo FROM senhas WHERE data_emissao = ? AND status = 'AGUARDANDO' ORDER BY sequencia, numero",
+    "SELECT numero, tipo FROM senhas WHERE data_emissao = ? AND status IN ('AGUARDANDO', 'EMITIDA') ORDER BY sequencia, numero",
     [hoje]
   );
   const sp = aguardando.find((senha) => senha.tipo === "SP");
@@ -268,7 +268,7 @@ export async function marcarNaoCompareceuNaTransacao(conexao, numero) {
 
 export async function obterPainel() {
   const [linhas] = await obterPool().execute(
-    `SELECT ${COLUNAS} FROM senhas WHERE ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 5`
+    `SELECT ${COLUNAS} FROM senhas WHERE ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 6`
   );
   const senhas = linhas.map(formatarSenha);
   return { atual: senhas[0] ?? null, anteriores: senhas.slice(1) };

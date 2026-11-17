@@ -11,14 +11,14 @@ const tipos = [
     descricao: "Atendimento preferencial",
   },
   {
-    sigla: "SG",
-    titulo: "Geral",
-    descricao: "Atendimento comum",
-  },
-  {
     sigla: "SE",
     titulo: "Exames",
     descricao: "Retirada de exames",
+  },
+  {
+    sigla: "SG",
+    titulo: "Geral",
+    descricao: "Atendimento comum",
   },
 ];
 
@@ -27,26 +27,25 @@ export default function Totem() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-async function emitir(tipo) {
-  if (carregando) return;
+  async function emitir(tipo) {
+    if (carregando) return;
 
-  setErro("");
-  setSenhaEmitida(null);
-  setCarregando(true);
+    setErro("");
+    setSenhaEmitida(null);
+    setCarregando(true);
 
-  try {
-    const novaSenha = await emitirSenha(tipo);
-    setSenhaEmitida(novaSenha);
-  } catch (error) {
-    setErro(error.message);
-  } finally {
-    setCarregando(false);
+    try {
+      const novaSenha = await emitirSenha(tipo);
+      setSenhaEmitida(novaSenha);
+    } catch (error) {
+      setErro(error.message);
+    } finally {
+      setCarregando(false);
+    }
   }
-}
-
 
   return (
-    <div className="nt-container">
+    <main className="nt-container">
       <h1>Retirar senha</h1>
 
       <p>Escolha o tipo de atendimento:</p>
@@ -58,11 +57,13 @@ async function emitir(tipo) {
               key={sigla}
               sigla={sigla}
               titulo={titulo}
+              nivelTitulo={2}
               descricao={descricao}
               rodape={
                 <Button
                   onClick={() => emitir(sigla)}
                   disabled={carregando}
+                  aria-label={`Emitir senha ${titulo} (${sigla})`}
                 >
                   Emitir senha
                 </Button>
@@ -94,6 +95,6 @@ async function emitir(tipo) {
           Aguarde a chamada.
         </Message>
       )}
-    </div>
+    </main>
   );
 }
