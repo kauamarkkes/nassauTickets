@@ -15,7 +15,12 @@ export async function apiRequest(caminho, opcoes = {}) {
     throw new Error("Não foi possível conectar à API. Verifique se o backend está ligado.");
   }
 
-  const dados = await resposta.json();
+  let dados = {};
+  try {
+  dados = await resposta.json();
+  } catch {
+  if (resposta.ok) throw new Error("Resposta inválida da API.");
+  }
 
   if (!resposta.ok) {
     const erro = new Error(dados.erro || `Erro na API: ${resposta.status}`);

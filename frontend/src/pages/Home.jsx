@@ -3,7 +3,7 @@ import "../styles/global.css";
 
 function Home() {
   return (
-    <div>
+    <main>
 
       <section className="hero">
         <h1>
@@ -36,7 +36,7 @@ function Home() {
           <p>Acompanhe e organize a fila.</p>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
 

@@ -179,7 +179,7 @@ export default function Admin({ aoSessaoExpirada }) {
         <div className="admin-secao-cabecalho"><div><span className="admin-sobretitulo">CONSULTA</span><h2>Filtrar indicadores</h2></div></div>
         <div className="admin-filtros-grade">
           <label>De <input type="date" value={filtros.inicio} onChange={(e) => setFiltros({ ...filtros, inicio: e.target.value })} required /></label>
-          <label>Até <input type="date" value={filtros.fim} onChange={(e) => setFiltros({ ...filtros, fim: e.target.value })} required /></label>
+          <label>Até <input type="date" min={filtros.inicio} value={filtros.fim} onChange={(e) => setFiltros({ ...filtros, fim: e.target.value })} required /></label>
           <label>Tipo <select value={filtros.tipo} onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}><option value="">Todos</option><option value="SP">Prioritária (SP)</option><option value="SG">Geral (SG)</option><option value="SE">Exames (SE)</option></select></label>
           <label>Situação <select value={filtros.status} onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}><option value="">Todas</option>{Object.entries(nomesStatus).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}</select></label>
           <label>Guichê <input type="number" min="1" max="65535" value={filtros.guiche} onChange={(e) => setFiltros({ ...filtros, guiche: e.target.value })} placeholder="Todos" /></label>
