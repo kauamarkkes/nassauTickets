@@ -10,7 +10,6 @@ import {
 import "../styles/global.css";
 
 const GUICHE_ATUAL = 1;
-const ATENDENTE_ATUAL = "Atendente 01";
 
 const STATUS_ATIVOS = [
   "CHAMADA",
@@ -22,17 +21,21 @@ function Attendant() {
   const [senhas, setSenhas] = useState([]);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [erroAtualizacao, setErroAtualizacao] = useState("");
 
-  async function atualizarSenhas() {
-    try {
-      const dados = await obterSenhas();
-      setSenhas(dados);
-      setErro("");
-    } catch (error) {
-      setErro(error.message);
+const atualizarSenhas = useCallback(async () => {
+  try {
+    const dados = await obterSenhas();
+    setSenhas(dados);
+    setErroAtualizacao("");
+  } catch (error) {
+    if (error.status === 401) {
+      aoSessaoExpirada();
+      return;
     }
+    setErroAtualizacao(error.message);
   }
-
+}, [aoSessaoExpirada]);
   useEffect(() => {
     atualizarSenhas();
 
@@ -70,11 +73,9 @@ function Attendant() {
     }
   }
 
-  function chamarProximaSenha() {
-    executar(() =>
-      chamarProxima(GUICHE_ATUAL, ATENDENTE_ATUAL)
-    );
-  }
+function chamarProximaSenha() {
+  executar(() => chamarProxima(GUICHE_ATUAL));
+}
 
   function chamarNovamenteSenha() {
     if (!senhaAtual) return;
@@ -240,6 +241,15 @@ function Attendant() {
             >
               Não compareceu
             </button>
+            {carregando && <p role="status">Processando ação...</p>}
+
+            {erro && <p role="alert">{erro}</p>}
+
+            {erroAtualizacao && (
+            <p role="alert">
+            Não foi possível atualizar a fila: {erroAtualizacao}
+           </p>
+            )}
 
           </div>
 

@@ -11,18 +11,13 @@ export function emitirSenha(tipo) {
   });
 }
 
-export function chamarProxima(
-  guiche,
-  atendente = "Atendente 01"
-) {
+export function chamarProxima(guiche) {
   return apiRequest("/atendimentos/proxima", {
     method: "POST",
-    body: JSON.stringify({
-      guiche,
-      atendente,
-    }),
+    body: JSON.stringify({ guiche }),
   });
 }
+
 
 export function iniciarAtendimento(numero) {
   return apiRequest(
