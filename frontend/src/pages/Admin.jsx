@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../api";
 import "../styles/global.css";
 
@@ -38,7 +38,7 @@ function caminhoResumo(filtros) {
   return `/admin/resumo?${parametros}`;
 }
 
-export default function Admin() {
+export default function Admin({ aoSessaoExpirada }) {
   const [filtros, setFiltros] = useState(() => ({
     inicio: dataHoje(), fim: dataHoje(), tipo: "", status: "", guiche: "",
   }));
@@ -51,6 +51,14 @@ export default function Admin() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
+
+  const tratarFalha = useCallback((falha) => {
+    if (falha.status === 401) {
+      aoSessaoExpirada();
+      return;
+    }
+    setErro(falha.message);
+  }, [aoSessaoExpirada]);
 
   async function atualizar() {
     const [dadosResumo, dadosUsuarios, dadosFila] = await Promise.all([
@@ -70,10 +78,10 @@ export default function Admin() {
       setResumo(dadosResumo);
       setUsuarios(dadosUsuarios);
       setOrdem(dadosFila.proximoNaoPrioritario);
-    }).catch((falha) => { if (ativo) setErro(falha.message); })
+    }).catch((falha) => { if (ativo) tratarFalha(falha); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, []);
+  }, [tratarFalha]);
 
   async function executar(operacao, sucesso) {
     setSalvando(true);
@@ -84,7 +92,7 @@ export default function Admin() {
       await atualizar();
       setMensagem(sucesso);
     } catch (falha) {
-      setErro(falha.message);
+      tratarFalha(falha);
     } finally {
       setSalvando(false);
     }
@@ -98,7 +106,7 @@ export default function Admin() {
       await atualizar();
       setMensagem("Dados atualizados.");
     } catch (falha) {
-      setErro(falha.message);
+      tratarFalha(falha);
     } finally {
       setSalvando(false);
     }
@@ -111,7 +119,7 @@ export default function Admin() {
     try {
       setResumo(await apiRequest(caminhoResumo(filtros)));
     } catch (falha) {
-      setErro(falha.message);
+      tratarFalha(falha);
     } finally {
       setSalvando(false);
     }

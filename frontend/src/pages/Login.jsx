@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
 import Button from "../components/Button";
 import Message from "../components/Message";
@@ -7,6 +7,7 @@ import "../styles/global.css";
 
 function Login({ aoEntrar }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [login, setLogin] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -41,6 +42,9 @@ function Login({ aoEntrar }) {
       <div className="login-card">
         <h1>Entrar no atendimento</h1>
         <p>Use o login e a senha da sua conta de atendente.</p>
+        {location.state?.sessaoExpirada && (
+          <Message tipo="warning">Sua sessão expirou. Entre novamente para continuar.</Message>
+        )}
         <form onSubmit={enviar}>
           <label htmlFor="login">Login</label>
           <input

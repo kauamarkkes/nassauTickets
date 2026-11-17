@@ -7,18 +7,18 @@ import Login from "../pages/Login";
 import ResetTest from "../pages/ResetTest";
 import Admin from "../pages/Admin";
 
-function AppRoutes({ sessao, aoEntrar }) {
+function AppRoutes({ sessao, aoEntrar, aoSessaoExpirada }) {
   const atendimento = sessao.verificando
     ? <p className="nt-container" role="status">Verificando sessão...</p>
     : sessao.usuario
-      ? <Attendant />
+      ? <Attendant aoSessaoExpirada={aoSessaoExpirada} />
       : <Navigate to="/login" replace />;
   const admin = sessao.verificando
     ? <p className="nt-container" role="status">Verificando sessão...</p>
     : !sessao.usuario
       ? <Navigate to="/login" replace />
       : sessao.usuario.perfil === "GESTOR"
-        ? <Admin />
+        ? <Admin aoSessaoExpirada={aoSessaoExpirada} />
         : <p className="nt-container" role="alert">Acesso reservado ao gestor.</p>;
 
   return (

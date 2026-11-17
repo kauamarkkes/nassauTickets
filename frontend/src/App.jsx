@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "./api";
 import Header from "./components/Header";
@@ -27,6 +27,11 @@ function App() {
     setSessao({ verificando: false, usuario });
   }
 
+  const aoSessaoExpirada = useCallback(() => {
+    setSessao({ verificando: false, usuario: null });
+    navigate("/login", { replace: true, state: { sessaoExpirada: true } });
+  }, [navigate]);
+
   async function sair() {
     setSaindo(true);
     setErroSair("");
@@ -50,7 +55,7 @@ function App() {
         saindo={saindo}
         erroSair={erroSair}
       />
-      <AppRoutes sessao={sessao} aoEntrar={aoEntrar} />
+      <AppRoutes sessao={sessao} aoEntrar={aoEntrar} aoSessaoExpirada={aoSessaoExpirada} />
       <Footer />
     </>
   );
