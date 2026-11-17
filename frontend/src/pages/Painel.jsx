@@ -8,140 +8,105 @@ const nomeTipo = {
   SG: "Geral",
 };
 
-function Painel() {
-const [painel, setPainel] = useState({
-  atual: null,
-  anteriores: [],
-});
-const [carregandoInicial, setCarregandoInicial] = useState(true);
-const [erro, setErro] = useState("");
-
-async function atualizar() {
-  try {
-    const dados = await obterPainel();
-    setPainel({
-      atual: dados.atual,
-      anteriores: dados.anteriores,
-    });
-    setErro("");
-  } catch (error) {
-    setErro(error.message);
-  } finally {
-    setCarregandoInicial(false);
-  }
+function classeTipo(tipo) {
+  return `badge badge-${String(tipo).toLowerCase()}`;
 }
 
-  async function atualizar() {
-    try {
-      const dados = await obterPainel();
-
-      setChamadas([
-        ...(dados.atual ? [dados.atual] : []),
-        ...dados.anteriores,
-      ]);
-    } catch (error) {
-      console.error("Erro ao atualizar painel:", error);
-    }
-  }
+function Painel() {
+  const [painel, setPainel] = useState({ atual: null, anteriores: [] });
+  const [carregandoInicial, setCarregandoInicial] = useState(true);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
-    atualizar();
+    let ativo = true;
 
-    const intervalo = setInterval(atualizar, 1000);
+    async function atualizar() {
+      try {
+        const dados = await obterPainel();
+        if (!ativo) return;
+        setPainel({
+          atual: dados.atual ?? null,
+          anteriores: Array.isArray(dados.anteriores) ? dados.anteriores : [],
+        });
+        setErro("");
+      } catch (falha) {
+        if (ativo) setErro(falha.message);
+      } finally {
+        if (ativo) setCarregandoInicial(false);
+      }
+    }
 
-    return () => clearInterval(intervalo);
+    const inicial = setTimeout(atualizar, 0);
+    const intervalo = setInterval(atualizar, 2000);
+    return () => {
+      ativo = false;
+      clearTimeout(inicial);
+      clearInterval(intervalo);
+    };
   }, []);
 
-  const atual = painel.atual;
-const anteriores = painel.anteriores;
+  const { atual, anteriores } = painel;
 
   return (
-    <div className="painel-page">
-
+    <main className="painel-page">
       <div className="painel-conteudo">
-      {erro && (
-      <p role="alert">
-       Não foi possível atualizar o painel: {erro}
-      </p>
-      )}
-        <div className="chamada-atual">
+        {erro && (
+          <p role="alert" className="chamada-erro">
+            Não foi possível atualizar o painel: {erro}
+          </p>
+        )}
 
+        <section
+          className="chamada-atual"
+          aria-label="Senha chamada"
+          aria-live="polite"
+        >
           {atual ? (
             <>
-              <span
-                className={`badge badge-${atual.tipo.toLowerCase()}`}
-              >
-                Atendimento {nomeTipo[atual.tipo]}
+              <span className={classeTipo(atual.tipo)}>
+                Atendimento {nomeTipo[atual.tipo] ?? atual.tipo}
               </span>
-
-             <h1>
-  {carregandoInicial
-    ? "Carregando painel..."
-    : erro
-      ? "Painel indisponível"
-      : "Aguardando chamada"}
-</h1>
-
-<p>
-  {carregandoInicial
-    ? "Consultando as chamadas."
-    : erro
-      ? "Aguardando a conexão com o servidor."
-      : "Nenhuma senha foi chamada ainda."}
-</p>
+              <h1 className="painel-numero">{atual.numero}</h1>
+              <p className="painel-guiche">Guichê {atual.guiche}</p>
             </>
           ) : (
             <>
               <h1>
-                Aguardando chamada
+                {carregandoInicial ? "Carregando painel..." : "Aguardando chamada"}
               </h1>
-
               <p>
-                Nenhuma senha foi chamada ainda.
+                {carregandoInicial
+                  ? "Consultando as chamadas."
+                  : "Nenhuma senha foi chamada ainda."}
               </p>
             </>
           )}
+        </section>
 
-        </div>
-
-        <div className="ultimas-chamadas">
-
-          <h2>
-            Últimas chamadas
-          </h2>
+        <section className="ultimas-chamadas" aria-labelledby="ultimas-titulo">
+          <h2 id="ultimas-titulo">Últimas chamadas</h2>
 
           {anteriores.length > 0 ? (
-            anteriores.map((senha) => (
-              <div
-                className="chamada-linha"
-                key={`${senha.numero}-${senha.ordemChamada}`}
-              >
-                <span>
-                  {senha.numero}
-                </span>
-
-                <span
-                  className={`badge badge-${senha.tipo.toLowerCase()}`}
+            <ul className="chamadas-lista">
+              {anteriores.slice(0, 5).map((senha) => (
+                <li
+                  className="chamada-linha"
+                  key={`${senha.numero}-${senha.ordemChamada}`}
                 >
-                  {nomeTipo[senha.tipo]}
-                </span>
-
-                <span className="chamada-guiche">
-                  Guichê {senha.guiche}
-                </span>
-              </div>
-            ))
+                  <span>{senha.numero}</span>
+                  <span className={classeTipo(senha.tipo)}>
+                    {nomeTipo[senha.tipo] ?? senha.tipo}
+                  </span>
+                  <span className="chamada-guiche">Guichê {senha.guiche}</span>
+                </li>
+              ))}
+            </ul>
           ) : (
-            <p>
-              Ainda não há chamadas anteriores.
-            </p>
+            <p>Ainda não há chamadas anteriores.</p>
           )}
-
-        </div>
-
+        </section>
       </div>
-
-    </div>
+    </main>
   );
 }
 
