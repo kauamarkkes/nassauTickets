@@ -10,7 +10,7 @@ function falha(status, mensagem) {
 
 function hojeLocal() {
   const agora = new Date();
-  return `${String(agora.getFullYear()).slice(-2)}${String(agora.getMonth() + 1).padStart(2, "0")}${String(agora.getDate()).padStart(2, "0")}`;
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
 }
 
 function validarSenha(senha) {
@@ -19,16 +19,52 @@ function validarSenha(senha) {
   }
 }
 
-export async function obterResumoDia(banco = obterPool()) {
-  const data = hojeLocal();
+const STATUS = new Set([
+  "EMITIDA", "AGUARDANDO", "CHAMADA", "CHAMADA_NOVAMENTE",
+  "EM_ATENDIMENTO", "ATENDIDA", "NÃO_COMPARECEU",
+]);
+
+function validarData(valor) {
+  if (typeof valor !== "string" || !/^20\d{2}-\d{2}-\d{2}$/.test(valor)) {
+    throw falha(400, "Informe datas no formato AAAA-MM-DD.");
+  }
+  const [ano, mes, dia] = valor.split("-").map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia));
+  if (data.getUTCFullYear() !== ano || data.getUTCMonth() !== mes - 1 || data.getUTCDate() !== dia) {
+    throw falha(400, "Informe uma data válida.");
+  }
+  return data;
+}
+
+export async function obterResumoDia(banco = obterPool(), filtros = {}) {
+  const inicio = filtros.inicio || hojeLocal();
+  const fim = filtros.fim || inicio;
+  const dataInicio = validarData(inicio);
+  const dataFim = validarData(fim);
+  const dias = (dataFim - dataInicio) / 86400000;
+  if (dias < 0 || dias > 365) throw falha(400, "Escolha um período de até 366 dias em ordem cronológica.");
+  const tipo = filtros.tipo || "";
+  const status = filtros.status || "";
+  const guiche = filtros.guiche || "";
+  if (tipo && !["SP", "SG", "SE"].includes(tipo)) throw falha(400, "Tipo de senha inválido.");
+  if (status && !STATUS.has(status)) throw falha(400, "Situação inválida.");
+  if (guiche && (!/^\d{1,5}$/.test(String(guiche)) || Number(guiche) < 1 || Number(guiche) > 65535)) {
+    throw falha(400, "Guichê inválido.");
+  }
+  const condicoes = ["data_emissao BETWEEN ? AND ?"];
+  const parametros = [inicio.slice(2).replaceAll("-", ""), fim.slice(2).replaceAll("-", "")];
+  if (tipo) { condicoes.push("tipo = ?"); parametros.push(tipo); }
+  if (status) { condicoes.push("status = ?"); parametros.push(status); }
+  if (guiche) { condicoes.push("guiche = ?"); parametros.push(Number(guiche)); }
+  const onde = `WHERE ${condicoes.join(" AND ")}`;
   const [grupos] = await banco.execute(
-    "SELECT tipo, status, COUNT(*) AS quantidade FROM senhas WHERE data_emissao = ? GROUP BY tipo, status",
-    [data]
+    `SELECT tipo, status, COUNT(*) AS quantidade FROM senhas ${onde} GROUP BY tipo, status`,
+    parametros
   );
   const [ultimasChamadas] = await banco.execute(
     `SELECT numero, tipo, status, guiche, atendente FROM senhas
-     WHERE data_emissao = ? AND ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 5`,
-    [data]
+     ${onde} AND ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 5`,
+    parametros
   );
   const porTipo = { SP: 0, SG: 0, SE: 0 };
   const porStatus = {};
@@ -39,7 +75,20 @@ export async function obterResumoDia(banco = obterPool()) {
     porTipo[grupo.tipo] = (porTipo[grupo.tipo] ?? 0) + quantidade;
     porStatus[grupo.status] = (porStatus[grupo.status] ?? 0) + quantidade;
   }
-  return { data, total, porTipo, porStatus, ultimasChamadas };
+  let porDia = total ? [{ data: parametros[0], quantidade: total }] : [];
+  if (inicio !== fim) {
+    const [diasAgrupados] = await banco.execute(
+      `SELECT data_emissao, COUNT(*) AS quantidade FROM senhas ${onde}
+       GROUP BY data_emissao ORDER BY data_emissao`,
+      parametros
+    );
+    porDia = diasAgrupados.map((linha) => ({ data: linha.data_emissao, quantidade: Number(linha.quantidade) }));
+  }
+  return {
+    inicio, fim, total, porTipo, porStatus,
+    porDia,
+    ultimasChamadas,
+  };
 }
 
 export async function listarUsuarios(banco = obterPool()) {

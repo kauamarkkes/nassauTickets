@@ -882,6 +882,13 @@ body {
 .admin-page > section { margin-top: 32px; }
 .admin-colunas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
 
+.admin-filtros { margin-top: 20px; }
+.admin-filtros-grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: end; }
+.admin-filtros-grade label { display: grid; gap: 6px; color: var(--nt-ink); font-size: .85rem; font-weight: 650; }
+.admin-filtros-grade input, .admin-filtros-grade select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--nt-border); border-radius: 8px; background: #fff; color: var(--nt-ink); font: inherit; }
+.admin-filtros-grade input:focus-visible, .admin-filtros-grade select:focus-visible { outline: 3px solid var(--nt-primary); outline-offset: 2px; }
+.admin-filtros-grade button { width: 100%; }
+
 .admin-secao {
   min-width: 0;
   padding: 24px;
@@ -940,6 +947,15 @@ body {
 }
 
 .admin-status strong { color: var(--nt-ink); font-size: 1.1rem; }
+.admin-graficos-colunas { align-items: start; }
+.admin-graficos-colunas h3, .admin-grafico-dias h3 { margin: 6px 0 20px; font-size: 1.2rem; }
+.admin-grafico-dias { margin-top: 20px; }
+.admin-grafico { display: grid; gap: 16px; padding: 0; margin: 0; list-style: none; }
+.admin-grafico-legenda { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: .86rem; }
+.admin-grafico-legenda strong { color: var(--nt-primary-dark); }
+.admin-grafico-trilho { height: 11px; overflow: hidden; border-radius: 999px; background: var(--nt-tint); }
+.admin-grafico-trilho span { display: block; height: 100%; border-radius: inherit; background: var(--nt-primary); }
+.admin-grafico-dias .admin-grafico { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 14px 20px; }
 .admin-lista-chamadas { list-style: none; padding: 0; margin: 16px 0 0; }
 .admin-lista-chamadas li { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; padding: 12px 0; border-top: 1px solid var(--nt-border); }
 .admin-lista-chamadas li strong { color: var(--nt-primary-dark); }
@@ -1001,12 +1017,14 @@ body {
   .admin-data { width: 100%; }
   .admin-metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-colunas { grid-template-columns: 1fr; }
+  .admin-filtros-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-secao { padding: 20px; }
   .admin-secao-cabecalho { align-items: start; flex-direction: column; }
 }
 
 @media (max-width: 420px) {
   .admin-metricas { grid-template-columns: 1fr; }
+  .admin-filtros-grade { grid-template-columns: 1fr; }
 }
 
 /* ---------- Movimento reduzido ---------- */

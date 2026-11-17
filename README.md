@@ -226,7 +226,7 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
 | `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
 | `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
-| `GET`   | `/admin/resumo`                    | Totais do dia e cinco últimas chamadas; somente GESTOR. |
+| `GET`   | `/admin/resumo`                    | Totais, gráficos e cinco últimas chamadas do período filtrado; somente GESTOR. |
 | `GET`   | `/admin/usuarios`                  | Listar usuários sem hashes; somente GESTOR. |
 | `POST`  | `/admin/usuarios`                  | Cadastrar usuário; somente GESTOR. |
 | `POST`  | `/admin/usuarios/redefinir-senha`  | Redefinir senha e encerrar sessões; somente GESTOR. |
@@ -267,6 +267,8 @@ O login recebe `{"login":"atendente","senha":"..."}` e, se válido, retorna `{"u
 
 As rotas `/admin/*` também exigem perfil `GESTOR` no servidor. Um atendente autenticado recebe `403`. O cadastro recebe `{ "login", "nome", "perfil", "senha" }`, com perfil `ATENDENTE` ou `GESTOR` e senha de pelo menos 12 caracteres. A redefinição recebe `{ "login", "novaSenha" }`. A configuração da fila recebe `{ "proximoNaoPrioritario": "SE" }` ou `SG`: ela escolhe o próximo tipo não prioritário, mantendo a alternância com SP e entre SE/SG nas chamadas seguintes.
 
+O painel do gestor filtra o resumo por `inicio` e `fim` no formato `AAAA-MM-DD` (período de até 366 dias), `tipo` (`SP`, `SG` ou `SE`), `status` e `guiche`. Sem filtros, mostra o dia atual. Os gráficos de barras por tipo, situação e dia usam os mesmos dados filtrados; a API devolve `porTipo`, `porStatus` e `porDia`. Exemplo: `GET /admin/resumo?inicio=2026-11-01&fim=2026-11-30&tipo=SP`. As consultas usam parâmetros no MySQL.
+
 Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
 
 ## Regras de atendimento
@@ -305,7 +307,7 @@ NÃO_COMPARECEU
 
 As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
 
-O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página `/login` envia as credenciais à API e redireciona para `/atendimento`; o navegador envia o cookie nas requisições seguintes. Ao recarregar, o React consulta `/auth/session`, protege `/atendimento` e troca o link Entrar pelo botão Sair enquanto houver sessão. O botão Sair invalida a sessão no servidor.
+O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página `/login` envia as credenciais à API e redireciona para `/atendimento`; o navegador envia o cookie nas requisições seguintes. Ao recarregar, o React consulta `/auth/session`, protege `/atendimento` e troca o link Entrar pelo botão Sair enquanto houver sessão. O botão Sair invalida a sessão no servidor. Se uma requisição protegida do atendimento ou da área admin retornar `401`, o React limpa a sessão e volta ao login com uma mensagem para entrar novamente.
 
 A numeração segue o formato:
 
@@ -331,7 +333,6 @@ A sequência é reiniciada de acordo com a data.
 
 * Melhorar filtros e ordenação das informações.
 * Evoluir a validação dos formulários.
-* Tratar a expiração de sessão na tela de atendimento sem depender de recarregar a página.
 * Implementar relatórios e informações de auditoria mais completas.
 * Evoluir o controle de expediente.
 * Adicionar tratamento de falhas e cenários de indisponibilidade da API.

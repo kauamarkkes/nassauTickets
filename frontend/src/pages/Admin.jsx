@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../api";
 import "../styles/global.css";
 
@@ -9,7 +9,39 @@ const nomesStatus = {
 };
 const nomesTipo = { SP: "Prioritária", SG: "Geral", SE: "Exames" };
 
-export default function Admin() {
+function dataHoje() {
+  const agora = new Date();
+  return `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
+}
+
+function mostrarData(valor) {
+  return `${valor.slice(8, 10)}/${valor.slice(5, 7)}/${valor.slice(0, 4)}`;
+}
+
+function GraficoBarras({ dados, vazio }) {
+  const maior = Math.max(1, ...dados.map((item) => item.quantidade));
+  if (dados.length === 0) return <p className="admin-vazio">{vazio}</p>;
+  return <ul className="admin-grafico">
+    {dados.map((item) => (
+      <li key={item.chave}>
+        <div className="admin-grafico-legenda"><span>{item.nome}</span><strong>{item.quantidade}</strong></div>
+        <div className="admin-grafico-trilho" aria-hidden="true">
+          <span style={{ width: `${(item.quantidade / maior) * 100}%` }} />
+        </div>
+      </li>
+    ))}
+  </ul>;
+}
+
+function caminhoResumo(filtros) {
+  const parametros = new URLSearchParams(filtros);
+  return `/admin/resumo?${parametros}`;
+}
+
+export default function Admin({ aoSessaoExpirada }) {
+  const [filtros, setFiltros] = useState(() => ({
+    inicio: dataHoje(), fim: dataHoje(), tipo: "", status: "", guiche: "",
+  }));
   const [resumo, setResumo] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [ordem, setOrdem] = useState("SE");
@@ -20,9 +52,17 @@ export default function Admin() {
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
+  const tratarFalha = useCallback((falha) => {
+    if (falha.status === 401) {
+      aoSessaoExpirada();
+      return;
+    }
+    setErro(falha.message);
+  }, [aoSessaoExpirada]);
+
   async function atualizar() {
     const [dadosResumo, dadosUsuarios, dadosFila] = await Promise.all([
-      apiRequest("/admin/resumo"), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
+      apiRequest(caminhoResumo(filtros)), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
     ]);
     setResumo(dadosResumo);
     setUsuarios(dadosUsuarios);
@@ -38,10 +78,10 @@ export default function Admin() {
       setResumo(dadosResumo);
       setUsuarios(dadosUsuarios);
       setOrdem(dadosFila.proximoNaoPrioritario);
-    }).catch((falha) => { if (ativo) setErro(falha.message); })
+    }).catch((falha) => { if (ativo) tratarFalha(falha); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, []);
+  }, [tratarFalha]);
 
   async function executar(operacao, sucesso) {
     setSalvando(true);
@@ -52,7 +92,7 @@ export default function Admin() {
       await atualizar();
       setMensagem(sucesso);
     } catch (falha) {
-      setErro(falha.message);
+      tratarFalha(falha);
     } finally {
       setSalvando(false);
     }
@@ -66,7 +106,20 @@ export default function Admin() {
       await atualizar();
       setMensagem("Dados atualizados.");
     } catch (falha) {
-      setErro(falha.message);
+      tratarFalha(falha);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function aplicarFiltros(evento) {
+    evento.preventDefault();
+    setSalvando(true);
+    setErro("");
+    try {
+      setResumo(await apiRequest(caminhoResumo(filtros)));
+    } catch (falha) {
+      tratarFalha(falha);
     } finally {
       setSalvando(false);
     }
@@ -97,9 +150,18 @@ export default function Admin() {
     }), "Ordem da fila atualizada.");
   }
 
-  const dataResumo = resumo?.data
-    ? `${resumo.data.slice(4, 6)}/${resumo.data.slice(2, 4)}/20${resumo.data.slice(0, 2)}`
+  const dataResumo = resumo?.inicio
+    ? resumo.inicio === resumo.fim ? mostrarData(resumo.inicio) : `${mostrarData(resumo.inicio)} a ${mostrarData(resumo.fim)}`
     : "Hoje";
+  const dadosTipo = resumo ? Object.entries(resumo.porTipo).map(([chave, quantidade]) => ({
+    chave, nome: `${nomesTipo[chave] ?? chave} (${chave})`, quantidade,
+  })) : [];
+  const dadosStatus = resumo ? Object.entries(nomesStatus).map(([chave, nome]) => ({
+    chave, nome, quantidade: resumo.porStatus[chave] ?? 0,
+  })) : [];
+  const dadosDias = resumo ? resumo.porDia.map(({ data, quantidade }) => ({
+    chave: data, nome: `${data.slice(4, 6)}/${data.slice(2, 4)}`, quantidade,
+  })) : [];
 
   return (
     <main className="nt-container admin-page">
@@ -107,22 +169,33 @@ export default function Admin() {
         <div>
           <span className="admin-sobretitulo">ÁREA DO GESTOR</span>
           <h1>Visão do atendimento</h1>
-          <p>Acompanhe a operação e organize os acessos da equipe.</p>
+          <p>Filtre os resultados, acompanhe a operação e organize os acessos da equipe.</p>
         </div>
         <div className="admin-data"><span>REFERÊNCIA</span><strong>{dataResumo}</strong></div>
       </header>
       {erro && <p role="alert" className="admin-aviso admin-alerta">{erro}</p>}
       {mensagem && <p role="status" className="admin-aviso admin-sucesso">{mensagem}</p>}
+      <form className="admin-secao admin-filtros" onSubmit={aplicarFiltros} aria-label="Filtros do painel">
+        <div className="admin-secao-cabecalho"><div><span className="admin-sobretitulo">CONSULTA</span><h2>Filtrar indicadores</h2></div></div>
+        <div className="admin-filtros-grade">
+          <label>De <input type="date" value={filtros.inicio} onChange={(e) => setFiltros({ ...filtros, inicio: e.target.value })} required /></label>
+          <label>Até <input type="date" value={filtros.fim} onChange={(e) => setFiltros({ ...filtros, fim: e.target.value })} required /></label>
+          <label>Tipo <select value={filtros.tipo} onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}><option value="">Todos</option><option value="SP">Prioritária (SP)</option><option value="SG">Geral (SG)</option><option value="SE">Exames (SE)</option></select></label>
+          <label>Situação <select value={filtros.status} onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}><option value="">Todas</option>{Object.entries(nomesStatus).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}</select></label>
+          <label>Guichê <input type="number" min="1" max="65535" value={filtros.guiche} onChange={(e) => setFiltros({ ...filtros, guiche: e.target.value })} placeholder="Todos" /></label>
+          <button type="submit" disabled={salvando}>Aplicar filtros</button>
+        </div>
+      </form>
       {carregando ? <p role="status" className="admin-carregando">Carregando informações do dia...</p> : (
         <>
           <section aria-labelledby="resumo-titulo">
             <div className="admin-secao-cabecalho">
-              <div><span className="admin-sobretitulo">OPERAÇÃO</span><h2 id="resumo-titulo">Resumo do dia</h2></div>
+              <div><span className="admin-sobretitulo">OPERAÇÃO</span><h2 id="resumo-titulo">Resumo do período</h2></div>
               <button type="button" className="admin-botao-secundario" onClick={atualizarManual} disabled={salvando}>Atualizar dados</button>
             </div>
             {resumo && <>
               <div className="admin-metricas">
-                <article className="admin-metrica admin-metrica-total"><span>Senhas emitidas</span><strong>{resumo.total}</strong><small>Total de hoje</small></article>
+                <article className="admin-metrica admin-metrica-total"><span>Senhas encontradas</span><strong>{resumo.total}</strong><small>No período filtrado</small></article>
                 {Object.entries(resumo.porTipo).map(([tipo, quantidade]) => (
                   <article className={`admin-metrica admin-metrica-${tipo.toLowerCase()}`} key={tipo}>
                     <span>{nomesTipo[tipo] ?? tipo}</span><strong>{quantidade}</strong><small>{tipo}</small>
@@ -134,6 +207,11 @@ export default function Admin() {
                   <div className="admin-status" key={status}><span>{nome}</span><strong>{resumo.porStatus[status] ?? 0}</strong></div>
                 ))}
               </div>
+              <div className="admin-colunas admin-graficos-colunas">
+                <section className="admin-secao" aria-labelledby="grafico-tipos"><span className="admin-sobretitulo">GRÁFICO</span><h3 id="grafico-tipos">Por tipo</h3><GraficoBarras dados={dadosTipo} vazio="Sem senhas neste período." /></section>
+                <section className="admin-secao" aria-labelledby="grafico-status"><span className="admin-sobretitulo">GRÁFICO</span><h3 id="grafico-status">Por situação</h3><GraficoBarras dados={dadosStatus} vazio="Sem senhas neste período." /></section>
+              </div>
+              <section className="admin-secao admin-grafico-dias" aria-labelledby="grafico-dias"><span className="admin-sobretitulo">GRÁFICO</span><h3 id="grafico-dias">Emissões por dia</h3><GraficoBarras dados={dadosDias} vazio="Nenhuma senha emitida no período." /></section>
             </>}
           </section>
 
@@ -144,7 +222,7 @@ export default function Admin() {
                 <ul className="admin-lista-chamadas">{resumo.ultimasChamadas.map((senha) => (
                   <li key={senha.numero}><strong>{senha.numero}</strong><span>Guichê {senha.guiche}</span><small>{senha.status.replaceAll("_", " ")}</small></li>
                 ))}</ul>
-              ) : <p className="admin-vazio">Nenhuma senha chamada hoje.</p>}
+              ) : <p className="admin-vazio">Nenhuma senha chamada no período.</p>}
             </section>
             <section className="admin-secao" aria-labelledby="fila-titulo">
               <span className="admin-sobretitulo">CONFIGURAÇÃO</span><h2 id="fila-titulo">Ordem da fila</h2>

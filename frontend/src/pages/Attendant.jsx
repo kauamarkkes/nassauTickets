@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   obterSenhas,
   chamarProxima,
@@ -17,7 +17,7 @@ const STATUS_ATIVOS = [
   "EM_ATENDIMENTO",
 ];
 
-function Attendant() {
+function Attendant({ aoSessaoExpirada }) {
   const [senhas, setSenhas] = useState([]);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -37,12 +37,13 @@ const atualizarSenhas = useCallback(async () => {
   }
 }, [aoSessaoExpirada]);
   useEffect(() => {
-    atualizarSenhas();
-
+    const inicial = setTimeout(atualizarSenhas, 0);
     const intervalo = setInterval(atualizarSenhas, 1000);
-
-    return () => clearInterval(intervalo);
-  }, []);
+    return () => {
+      clearTimeout(inicial);
+      clearInterval(intervalo);
+    };
+  }, [atualizarSenhas]);
 
   const senhaAtual = senhas.find(
     (senha) =>
@@ -66,6 +67,10 @@ const atualizarSenhas = useCallback(async () => {
       await acao();
       await atualizarSenhas();
     } catch (error) {
+      if (error.status === 401) {
+        aoSessaoExpirada();
+        return;
+      }
       console.error("Erro no atendimento:", error);
       setErro(error.message);
     } finally {
