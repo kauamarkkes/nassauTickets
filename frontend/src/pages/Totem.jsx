@@ -27,23 +27,23 @@ export default function Totem() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
 
-  async function emitir(tipo) {
-    if (carregando) return;
+async function emitir(tipo) {
+  if (carregando) return;
 
-    setErro("");
-    setCarregando(true);
+  setErro("");
+  setSenhaEmitida(null);
+  setCarregando(true);
 
-    try {
-      const novaSenha = await emitirSenha(tipo);
-
-      setSenhaEmitida(novaSenha);
-    } catch (error) {
-      console.error("Erro ao emitir senha:", error);
-      setErro(error.message);
-    } finally {
-      setCarregando(false);
-    }
+  try {
+    const novaSenha = await emitirSenha(tipo);
+    setSenhaEmitida(novaSenha);
+  } catch (error) {
+    setErro(error.message);
+  } finally {
+    setCarregando(false);
   }
+}
+
 
   return (
     <div className="nt-container">
@@ -62,6 +62,7 @@ export default function Totem() {
               rodape={
                 <Button
                   onClick={() => emitir(sigla)}
+                  disabled={carregando}
                 >
                   Emitir senha
                 </Button>
