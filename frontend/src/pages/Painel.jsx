@@ -9,7 +9,27 @@ const nomeTipo = {
 };
 
 function Painel() {
-  const [chamadas, setChamadas] = useState([]);
+const [painel, setPainel] = useState({
+  atual: null,
+  anteriores: [],
+});
+const [carregandoInicial, setCarregandoInicial] = useState(true);
+const [erro, setErro] = useState("");
+
+async function atualizar() {
+  try {
+    const dados = await obterPainel();
+    setPainel({
+      atual: dados.atual,
+      anteriores: dados.anteriores,
+    });
+    setErro("");
+  } catch (error) {
+    setErro(error.message);
+  } finally {
+    setCarregandoInicial(false);
+  }
+}
 
   async function atualizar() {
     try {
@@ -32,14 +52,18 @@ function Painel() {
     return () => clearInterval(intervalo);
   }, []);
 
-  const atual = chamadas[0];
-  const anteriores = chamadas.slice(1);
+  const atual = painel.atual;
+const anteriores = painel.anteriores;
 
   return (
     <div className="painel-page">
 
       <div className="painel-conteudo">
-
+      {erro && (
+      <p role="alert">
+       Não foi possível atualizar o painel: {erro}
+      </p>
+      )}
         <div className="chamada-atual">
 
           {atual ? (
@@ -50,13 +74,21 @@ function Painel() {
                 Atendimento {nomeTipo[atual.tipo]}
               </span>
 
-              <h1>
-                {atual.numero}
-              </h1>
+             <h1>
+  {carregandoInicial
+    ? "Carregando painel..."
+    : erro
+      ? "Painel indisponível"
+      : "Aguardando chamada"}
+</h1>
 
-              <p>
-                Dirija-se ao Guichê {atual.guiche}
-              </p>
+<p>
+  {carregandoInicial
+    ? "Consultando as chamadas."
+    : erro
+      ? "Aguardando a conexão com o servidor."
+      : "Nenhuma senha foi chamada ainda."}
+</p>
             </>
           ) : (
             <>
