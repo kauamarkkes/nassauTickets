@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { verificarConexao, encerrarPool } from "./db.js";
+import { verificarConexao, encerrarPool, obterPool } from "./db.js";
 import { redefinirSenhaAtendente } from "./auth/resetPassword.js";
 import {
   obterResumoDia, listarUsuarios, criarUsuario, redefinirSenhaUsuario,
@@ -136,7 +136,7 @@ app.post("/auth/reset-test", rota(async (req) => {
   return { dados: { mensagem: "Senha redefinida. Entre com a nova senha." } };
 }));
 
-app.get("/admin/resumo", rotaGestor(async () => ({ dados: await obterResumoDia() })));
+app.get("/admin/resumo", rotaGestor(async (req) => ({ dados: await obterResumoDia(obterPool(), req.query) })));
 app.get("/admin/usuarios", rotaGestor(async () => ({ dados: await listarUsuarios() })));
 app.post("/admin/usuarios", rotaGestor(async (req) => ({
   status: 201, dados: await criarUsuario(req.body),

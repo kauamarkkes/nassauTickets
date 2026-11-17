@@ -226,7 +226,7 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
 | `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
 | `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
-| `GET`   | `/admin/resumo`                    | Totais do dia e cinco últimas chamadas; somente GESTOR. |
+| `GET`   | `/admin/resumo`                    | Totais, gráficos e cinco últimas chamadas do período filtrado; somente GESTOR. |
 | `GET`   | `/admin/usuarios`                  | Listar usuários sem hashes; somente GESTOR. |
 | `POST`  | `/admin/usuarios`                  | Cadastrar usuário; somente GESTOR. |
 | `POST`  | `/admin/usuarios/redefinir-senha`  | Redefinir senha e encerrar sessões; somente GESTOR. |
@@ -266,6 +266,8 @@ A API retorna respostas de erro em JSON para entradas inválidas, senha não enc
 O login recebe `{"login":"atendente","senha":"..."}` e, se válido, retorna `{"usuario":{"id":1,"login":"atendente","nome":"Atendente 01","perfil":"ATENDENTE"}}` com cookie de sessão `HttpOnly`, `SameSite=Lax` e duração de oito horas. O navegador deve enviar requisições com `credentials: "include"`; `/auth/session` devolve o mesmo objeto de usuário após recarregar a página. `/auth/logout` invalida a sessão no servidor. Credenciais inválidas ou sessão ausente retornam `401`; uma origem HTTP não permitida retorna `403`. O cookie recebe `Secure` quando `NODE_ENV=production`, exigindo HTTPS.
 
 As rotas `/admin/*` também exigem perfil `GESTOR` no servidor. Um atendente autenticado recebe `403`. O cadastro recebe `{ "login", "nome", "perfil", "senha" }`, com perfil `ATENDENTE` ou `GESTOR` e senha de pelo menos 12 caracteres. A redefinição recebe `{ "login", "novaSenha" }`. A configuração da fila recebe `{ "proximoNaoPrioritario": "SE" }` ou `SG`: ela escolhe o próximo tipo não prioritário, mantendo a alternância com SP e entre SE/SG nas chamadas seguintes.
+
+O painel do gestor filtra o resumo por `inicio` e `fim` no formato `AAAA-MM-DD` (período de até 366 dias), `tipo` (`SP`, `SG` ou `SE`), `status` e `guiche`. Sem filtros, mostra o dia atual. Os gráficos de barras por tipo, situação e dia usam os mesmos dados filtrados; a API devolve `porTipo`, `porStatus` e `porDia`. Exemplo: `GET /admin/resumo?inicio=2026-11-01&fim=2026-11-30&tipo=SP`. As consultas usam parâmetros no MySQL.
 
 Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
 
