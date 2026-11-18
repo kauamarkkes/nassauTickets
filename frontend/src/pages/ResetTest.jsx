@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { apiRequest } from "../api";
 import Button from "../components/Button";
 import Message from "../components/Message";
+import ROUTES from "../routes/paths";
 import "../styles/global.css";
 
 function ResetTest() {
@@ -69,7 +69,9 @@ function ResetTest() {
             {carregando ? "Redefinindo..." : "Redefinir senha"}
           </Button>
         </form>
-        <p><Link to="/login">Voltar ao login</Link></p>
+        <p>
+          <Button to={ROUTES.login} variante="secondary">Voltar ao login</Button>
+        </p>
       </div>
     </main>
   );
