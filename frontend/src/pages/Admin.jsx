@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../api";
+import Button from "../components/Button";
+import Message from "../components/Message";
 import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
@@ -204,8 +206,8 @@ export default function Admin({ aoSessaoExpirada }) {
         </div>
         <div className="admin-data"><span>REFERÊNCIA</span><strong>{dataResumo}</strong></div>
       </header>
-      {erro && <p role="alert" className="admin-aviso admin-alerta">{erro}</p>}
-      {mensagem && <p role="status" className="admin-aviso admin-sucesso">{mensagem}</p>}
+      {erro && <Message tipo="error" className="admin-aviso admin-alerta">{erro}</Message>}
+      {mensagem && <Message tipo="success" className="admin-aviso admin-sucesso">{mensagem}</Message>}
       <form className="admin-secao admin-filtros" onSubmit={aplicarFiltros} aria-label="Filtros do painel">
         <div className="admin-secao-cabecalho"><div><span className="admin-sobretitulo">CONSULTA</span><h2>Filtrar indicadores</h2></div></div>
         <div className="admin-filtros-grade">
@@ -214,7 +216,7 @@ export default function Admin({ aoSessaoExpirada }) {
           <label>Tipo <select value={filtros.tipo} onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}><option value="">Todos</option><option value="SP">Prioritária (SP)</option><option value="SG">Geral (SG)</option><option value="SE">Exames (SE)</option></select></label>
           <label>Situação <select value={filtros.status} onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}><option value="">Todas</option>{Object.entries(nomesStatus).map(([valor, nome]) => <option key={valor} value={valor}>{nome}</option>)}</select></label>
           <label>Guichê <input type="number" min="1" max="65535" value={filtros.guiche} onChange={(e) => setFiltros({ ...filtros, guiche: e.target.value })} placeholder="Todos" /></label>
-          <button type="submit" disabled={salvando}>Aplicar filtros</button>
+          <Button variante="primary" type="submit" disabled={salvando}>Aplicar filtros</Button>
         </div>
       </form>
       {carregando ? <p role="status" className="admin-carregando">Carregando informações do dia...</p> : (
@@ -222,7 +224,7 @@ export default function Admin({ aoSessaoExpirada }) {
           <section aria-labelledby="resumo-titulo">
             <div className="admin-secao-cabecalho">
               <div><span className="admin-sobretitulo">OPERAÇÃO</span><h2 id="resumo-titulo">Resumo do período</h2></div>
-              <button type="button" className="admin-botao-secundario" onClick={atualizarManual} disabled={salvando}>Atualizar dados</button>
+              <Button variante="secondary" className="admin-botao-secundario" onClick={atualizarManual} disabled={salvando}>Atualizar dados</Button>
             </div>
             {resumo && <>
               <div className="admin-metricas">
@@ -249,7 +251,7 @@ export default function Admin({ aoSessaoExpirada }) {
           <section className="admin-secao" aria-labelledby="relatorio-titulo">
             <div className="admin-secao-cabecalho">
               <div><span className="admin-sobretitulo">RELATÓRIO</span><h2 id="relatorio-titulo">Senhas e auditoria do período</h2></div>
-              <button type="button" className="admin-botao-secundario" onClick={carregarRelatorio} disabled={salvando}>Carregar relatório</button>
+              <Button variante="secondary" className="admin-botao-secundario" onClick={carregarRelatorio} disabled={salvando}>Carregar relatório</Button>
             </div>
             {relatorio && <>
               <p>Emitidas: {relatorio.total} · Atendidas: {relatorio.atendidas} · Tempo médio: {relatorio.tempoMedioMinutos === null ? "sem dados" : `${relatorio.tempoMedioMinutos} min`}</p>
@@ -282,7 +284,7 @@ export default function Admin({ aoSessaoExpirada }) {
               <p>SP continua alternando com as demais. Escolha qual será o próximo tipo entre SE e SG.</p>
               <form onSubmit={salvarFila} className="admin-form admin-form-vertical">
                 <label>Próximo tipo não prioritário <select value={ordem} onChange={(e) => setOrdem(e.target.value)}><option value="SE">Exames (SE)</option><option value="SG">Geral (SG)</option></select></label>
-                <button type="submit" disabled={salvando}>Salvar ordem</button>
+                <Button variante="primary" type="submit" disabled={salvando}>Salvar ordem</Button>
               </form>
             </section>
           </div>
@@ -305,7 +307,7 @@ export default function Admin({ aoSessaoExpirada }) {
                 <label>Nome <input value={novo.nome} onChange={(e) => setNovo({ ...novo, nome: e.target.value })} required maxLength={120} /></label>
                 <label>Perfil <select value={novo.perfil} onChange={(e) => setNovo({ ...novo, perfil: e.target.value })}><option value="ATENDENTE">Atendente</option><option value="GESTOR">Gestor</option></select></label>
                 <label>Senha inicial <input type="password" value={novo.senha} onChange={(e) => setNovo({ ...novo, senha: e.target.value })} required minLength={12} autoComplete="new-password" /></label>
-                <button type="submit" disabled={salvando}>Cadastrar usuário</button>
+                <Button variante="primary" type="submit" disabled={salvando}>Cadastrar usuário</Button>
               </form>
             </section>
             <section className="admin-secao" aria-labelledby="redefinir-titulo">
@@ -314,7 +316,7 @@ export default function Admin({ aoSessaoExpirada }) {
               <form onSubmit={redefinir} className="admin-form admin-form-vertical">
                 <label>Usuário <select value={redefinicao.login} onChange={(e) => setRedefinicao({ ...redefinicao, login: e.target.value })} required><option value="">Selecione</option>{usuarios.filter((usuario) => usuario.ativo).map((usuario) => <option key={usuario.id} value={usuario.login}>{usuario.nome} ({usuario.login})</option>)}</select></label>
                 <label>Nova senha <input type="password" value={redefinicao.novaSenha} onChange={(e) => setRedefinicao({ ...redefinicao, novaSenha: e.target.value })} required minLength={12} autoComplete="new-password" /></label>
-                <button type="submit" disabled={salvando}>Redefinir senha</button>
+                <Button variante="primary" type="submit" disabled={salvando}>Redefinir senha</Button>
               </form>
             </section>
           </div>
