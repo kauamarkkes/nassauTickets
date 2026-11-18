@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Button from "../components/Button";
 import Card from "../components/Card";
 import ROUTES from "../routes/paths";
@@ -8,20 +9,23 @@ const recursos = [
     rotulo: "01 / CLIENTE",
     titulo: "Totem de senhas",
     descricao: "Escolha o atendimento e emita sua senha.",
+    to: ROUTES.totem,
   },
   {
     rotulo: "02 / CHAMADAS",
     titulo: "Painel ao vivo",
     descricao: "Veja a senha chamada e o guichê.",
+    to: ROUTES.panel,
   },
   {
     rotulo: "03 / EQUIPE",
     titulo: "Terminal",
     descricao: "Acompanhe e organize a fila.",
+    to: ROUTES.attendant,
   },
 ];
 
-function Home({ itens = recursos }) {
+function Home() {
   return (
     <main>
       <section className="hero">
@@ -37,11 +41,11 @@ function Home({ itens = recursos }) {
       </section>
 
       <section className="features">
-        {itens.map((item) => (
+        {recursos.map((item) => (
           <Card
             key={item.rotulo}
-            as="article"
-            className="feature-card"
+            as={Link}
+            className="feature-card feature-card-link"
             nivelTitulo={3}
             {...item}
           />
