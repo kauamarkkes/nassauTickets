@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { obterPainel } from "../storage";
 import { numeroFalado } from "../numeroFalado";
+import Button from "../components/Button";
+import Message from "../components/Message";
 import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
@@ -102,19 +104,27 @@ function Painel() {
   return (
     <main className="painel-page">
       <div className="painel-conteudo">
-        {erroAudio && <p role="alert">{erroAudio}</p>}
+        {erroAudio && <Message tipo="error">{erroAudio}</Message>}
         {erro && (
-          <p role="alert" className="chamada-erro">
+          <Message tipo="error">
             Não foi possível atualizar o painel: {erro}
-          </p>
+          </Message>
         )}
         {erro && (
-          <div>
-            <button type="button" className="btn-outline" onClick={() => setTentativa((valor) => valor + 1)}>Tentar novamente</button>
-            <button type="button" className="btn-outline" onClick={() => setModoDemo(true)}>Ver demonstração</button>
+          <div className="painel-acoes">
+            <Button variante="secondary" onClick={() => setTentativa((valor) => valor + 1)}>
+              Tentar novamente
+            </Button>
+            <Button variante="secondary" onClick={() => setModoDemo(true)}>
+              Ver demonstração
+            </Button>
           </div>
         )}
-        {modoDemo && erro && <p role="status">Dados locais de demonstração. Não são chamadas reais.</p>}
+        {modoDemo && erro && (
+          <Message tipo="info">
+            Dados locais de demonstração. Não são chamadas reais.
+          </Message>
+        )}
 
         <section
           className="chamada-atual"
