@@ -8,6 +8,7 @@ import {
   marcarNaoCompareceu,
 } from "../storage";
 import { numeroFalado } from "../numeroFalado";
+import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
 const STATUS_ATIVOS = ["CHAMADA", "CHAMADA_NOVAMENTE", "EM_ATENDIMENTO"];
@@ -148,9 +149,9 @@ function Attendant({ aoSessaoExpirada }) {
   }
 
   const filas = [
-    { tipo: "SP", classe: "badge-sp", nome: "Prioritárias" },
-    { tipo: "SE", classe: "badge-se", nome: "Exames" },
-    { tipo: "SG", classe: "badge-sg", nome: "Gerais" },
+    { tipo: "SP", nome: "Prioritárias" },
+    { tipo: "SE", nome: "Exames" },
+    { tipo: "SG", nome: "Gerais" },
   ];
 
   return (
@@ -160,9 +161,9 @@ function Attendant({ aoSessaoExpirada }) {
           <h2 id="fila-titulo">Fila de atendimento</h2>
 
           <div className="atd-fila-itens">
-            {filas.map(({ tipo, classe, nome }) => (
+            {filas.map(({ tipo, nome }) => (
               <div className="atd-fila-item" key={tipo}>
-                <span className={`badge ${classe}`}>{nome}</span>
+                <TicketTypeBadge tipo={tipo}>{nome}</TicketTypeBadge>
                 <strong aria-label={`${nome}: ${contarNaFila(tipo)} na fila`}>
                   {String(contarNaFila(tipo)).padStart(2, "0")}
                 </strong>

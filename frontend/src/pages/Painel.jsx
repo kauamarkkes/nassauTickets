@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { obterPainel } from "../storage";
 import { numeroFalado } from "../numeroFalado";
+import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
 const nomeTipo = {
@@ -16,10 +17,6 @@ const painelDemo = {
     { numero: "260819-SG001", tipo: "SG", guiche: 1, ordemChamada: 1 },
   ],
 };
-
-function classeTipo(tipo) {
-  return `badge badge-${String(tipo).toLowerCase()}`;
-}
 
 function pararFala(falaAtual, inicioPendente) {
   clearTimeout(inicioPendente.current);
@@ -126,9 +123,9 @@ function Painel() {
         >
           {atual ? (
             <>
-              <span className={classeTipo(atual.tipo)}>
+              <TicketTypeBadge tipo={atual.tipo}>
                 Atendimento {nomeTipo[atual.tipo] ?? atual.tipo}
-              </span>
+              </TicketTypeBadge>
               <h1 className="painel-numero">{atual.numero}</h1>
               <p className="painel-guiche">Guichê {atual.guiche}</p>
             </>
@@ -157,9 +154,9 @@ function Painel() {
                   key={`${senha.numero}-${senha.ordemChamada}`}
                 >
                   <span>{senha.numero}</span>
-                  <span className={classeTipo(senha.tipo)}>
+                  <TicketTypeBadge tipo={senha.tipo}>
                     {nomeTipo[senha.tipo] ?? senha.tipo}
-                  </span>
+                  </TicketTypeBadge>
                   <span className="chamada-guiche">Guichê {senha.guiche}</span>
                 </li>
               ))}

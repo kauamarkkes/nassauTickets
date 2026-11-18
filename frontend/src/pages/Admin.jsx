@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../api";
+import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
 const nomesStatus = {
@@ -257,7 +258,7 @@ export default function Admin({ aoSessaoExpirada }) {
                 <div className="admin-tabela-rolagem"><table className="admin-tabela">
                   <thead><tr><th>Senha</th><th>Tipo</th><th>Situação</th><th>Emissão</th><th>Guichê</th><th>Atendente</th><th>1ª chamada</th><th>2ª chamada</th><th>Início</th><th>Fim</th><th>Encerramento</th></tr></thead>
                   <tbody>{relatorio.detalhes.map((senha) => <tr key={senha.numero}>
-                    <td>{senha.numero}</td><td>{senha.tipo}</td><td>{senha.status.replaceAll("_", " ")}</td>
+                    <td>{senha.numero}</td><td><TicketTypeBadge tipo={senha.tipo} /></td><td>{senha.status.replaceAll("_", " ")}</td>
                     <td>{senha.emitida_em}</td><td>{senha.guiche ?? ""}</td><td>{senha.atendente ?? ""}</td>
                     <td>{senha.primeira_chamada_em ?? ""}</td><td>{senha.segunda_chamada_em ?? ""}</td>
                     <td>{senha.inicio_atendimento_em ?? ""}</td><td>{senha.finalizacao_em ?? ""}</td><td>{senha.encerrada_em ?? ""}</td>
