@@ -73,8 +73,6 @@ A comunicação entre frontend e backend é centralizada pelos arquivos `api.js`
 ```text
 nassauTickets/
 ├── backend/
-│   ├── data/
-│   │   └── senhas.json (legado, não utilizado pela API)
 │   └── src/
 │       └── server.js
 ├── docs/
@@ -318,7 +316,7 @@ NÃO_COMPARECEU
 
 ## Dados e persistência
 
-As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
+As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo JSON usado no protótipo da AV1 foi retirado do backend na AV2; a API atual lê e grava apenas no MySQL.
 
 O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página `/login` envia as credenciais à API e redireciona para `/atendimento`; o navegador envia o cookie nas requisições seguintes. Ao recarregar, o React consulta `/auth/session`, protege `/atendimento` e troca o link Entrar pelo botão Sair enquanto houver sessão. O botão Sair invalida a sessão no servidor. Se uma requisição protegida do atendimento ou da área admin retornar `401`, o React limpa a sessão e volta ao login com uma mensagem para entrar novamente.
 
