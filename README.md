@@ -134,6 +134,7 @@ Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco 
 | `FRONTEND_ORIGIN` | Origem permitida para o frontend e requisições com sessão | `http://localhost:5173` |
 | `ENABLE_TEST_RESET` | Habilita redefinição de senha apenas no servidor local de teste | `false` |
 | `TEST_RESET_CODE` | Código de redefinição do teste local; mantenha só no `.env` | vazio |
+| `DEMO_OUTSIDE_HOURS` | Permite praticar emissão e chamada fora do horário apenas em desenvolvimento | `false` |
 
 Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
 
@@ -345,7 +346,7 @@ A sequência é reiniciada de acordo com a data.
 
 Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam operações. O painel oferece **Tentar novamente** e **Ver demonstração**; os dados locais são rotulados como demonstração e não representam chamadas reais. Quando a API volta, o painel retoma os dados do servidor.
 
-* O expediente de 7h às 17h e o descarte formal de senhas pendentes ainda precisam ser aplicados no backend.
+* O backend só aceita novas emissões e chamadas das 7h às 17h pelo horário local do servidor; atendimentos já chamados podem ser concluídos depois. Para praticar fora desse horário, `DEMO_OUTSIDE_HOURS=true` no `.env` local funciona somente fora de produção. Senhas pendentes deixam de ser elegíveis após o expediente e no dia seguinte, mas ainda não recebem um estado histórico próprio de descarte.
 * O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
 * O áudio do painel depende de uma voz disponível no navegador e de um clique inicial em **Ativar som das chamadas**.
 * A integração completa com MySQL ainda precisa ser conferida em um ambiente com banco ativo.

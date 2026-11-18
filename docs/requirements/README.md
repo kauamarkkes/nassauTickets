@@ -13,7 +13,8 @@ Referências: *Atividade — Sistema para controle de atendimento*, *Sistema par
 | RF05 | Autenticar atendente, restaurar sessão, proteger rotas e permitir logout | Implementado |
 | RF06 | Permitir gestão de usuários e consulta de indicadores | Implementado |
 | RF07 | Relatórios diário e mensal, detalhe das senhas, tempo médio e auditoria | Implementado no código atual; integração com MySQL pendente de conferência |
-| RF08 | Restringir novas chamadas ao expediente de 7h às 17h e descartar pendentes | Pendente |
+| RF08 | Restringir emissão e novas chamadas ao expediente de 7h às 17h | Implementado no código atual |
+| RF09 | Registrar formalmente o descarte de senhas pendentes ao fim do expediente | Pendente; as pendentes deixam de ser elegíveis |
 
 ## Regras de negócio
 
