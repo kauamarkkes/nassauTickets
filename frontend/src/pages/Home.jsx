@@ -1,10 +1,29 @@
-import { Link } from "react-router-dom";
+import Button from "../components/Button";
+import Card from "../components/Card";
+import ROUTES from "../routes/paths";
 import "../styles/global.css";
 
-function Home() {
+const recursos = [
+  {
+    rotulo: "01 / CLIENTE",
+    titulo: "Totem de senhas",
+    descricao: "Escolha o atendimento e emita sua senha.",
+  },
+  {
+    rotulo: "02 / CHAMADAS",
+    titulo: "Painel ao vivo",
+    descricao: "Veja a senha chamada e o guichê.",
+  },
+  {
+    rotulo: "03 / EQUIPE",
+    titulo: "Terminal",
+    descricao: "Acompanhe e organize a fila.",
+  },
+];
+
+function Home({ itens = recursos }) {
   return (
     <main>
-
       <section className="hero">
         <h1>
           Mais organização.
@@ -12,29 +31,21 @@ function Home() {
           Menos espera.
         </h1>
         <p>Emissão, fila e atendimento em um só lugar.</p>
-        <Link className="btn-primary" to="/totem">
+        <Button to={ROUTES.totem} className="home-cta">
           Retirar uma senha
-        </Link>
+        </Button>
       </section>
 
       <section className="features">
-        <div className="feature-card">
-          <span className="feature-tag">01 / CLIENTE</span>
-          <h3>Totem de senhas</h3>
-          <p>Escolha o atendimento e emita sua senha.</p>
-        </div>
-
-        <div className="feature-card">
-          <span className="feature-tag">02 / CHAMADAS</span>
-          <h3>Painel ao vivo</h3>
-          <p>Veja a senha chamada e o guichê.</p>
-        </div>
-
-        <div className="feature-card">
-          <span className="feature-tag">03 / EQUIPE</span>
-          <h3>Terminal</h3>
-          <p>Acompanhe e organize a fila.</p>
-        </div>
+        {itens.map((item) => (
+          <Card
+            key={item.rotulo}
+            as="article"
+            className="feature-card"
+            nivelTitulo={3}
+            {...item}
+          />
+        ))}
       </section>
     </main>
   );

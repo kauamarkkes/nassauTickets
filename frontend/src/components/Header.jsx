@@ -1,20 +1,21 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import ROUTES from "../routes/paths";
 import "../styles/global.css";
 
 const links = [
-  { nome: "Início", rota: "/" },
-  { nome: "Totem", rota: "/totem" },
-  { nome: "Painel", rota: "/painel" },
+  { nome: "Início", rota: ROUTES.home },
+  { nome: "Totem", rota: ROUTES.totem },
+  { nome: "Painel", rota: ROUTES.panel },
 ];
 
 function Header({ usuario, verificando, aoSair, saindo, erroSair }) {
   const [menuAberto, setMenuAberto] = useState(false);
   const linksVisiveis = [
     ...links,
-    ...(usuario ? [{ nome: "Atendimento", rota: "/atendimento" }] :
-      verificando ? [] : [{ nome: "Entrar", rota: "/login" }]),
-    ...(usuario?.perfil === "GESTOR" ? [{ nome: "Admin", rota: "/admin" }] : []),
+    ...(usuario ? [{ nome: "Atendimento", rota: ROUTES.attendant }] :
+      verificando ? [] : [{ nome: "Entrar", rota: ROUTES.login }]),
+    ...(usuario?.perfil === "GESTOR" ? [{ nome: "Admin", rota: ROUTES.admin }] : []),
   ];
 
   return (
@@ -22,7 +23,7 @@ function Header({ usuario, verificando, aoSair, saindo, erroSair }) {
       <div className="nt-container nt-header__inner">
         <Link
           className="nt-header__brand"
-          to="/"
+          to={ROUTES.home}
           onClick={() => setMenuAberto(false)}
         >
           nassauTickets
