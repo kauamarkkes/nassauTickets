@@ -8,6 +8,8 @@ import {
   marcarNaoCompareceu,
 } from "../storage";
 import { numeroFalado } from "../numeroFalado";
+import Button from "../components/Button";
+import Message from "../components/Message";
 import TicketTypeBadge from "../components/TicketTypeBadge";
 import "../styles/global.css";
 
@@ -186,9 +188,9 @@ function Attendant({ aoSessaoExpirada }) {
             />
           </div>
           {!guicheValido && (
-            <p role="alert" className="atd-erro">
+            <Message tipo="error" className="atd-erro">
               Informe um número de guichê entre 1 e 65535.
-            </p>
+            </Message>
           )}
 
           <div className="atd-senha-atual" aria-live="polite">
@@ -207,18 +209,16 @@ function Attendant({ aoSessaoExpirada }) {
           </div>
 
           <div className="atd-botoes">
-            <button
-              type="button"
-              className="btn-primary"
+            <Button
+              variante="primary"
               onClick={chamarProximaSenha}
               disabled={carregando || !guicheValido || !!senhaAtual}
             >
               Chamar próxima
-            </button>
+            </Button>
 
-            <button
-              type="button"
-              className="btn-outline"
+            <Button
+              variante="secondary"
               onClick={chamarNovamenteSenha}
               disabled={
                 carregando ||
@@ -228,11 +228,10 @@ function Attendant({ aoSessaoExpirada }) {
               }
             >
               Chamar novamente
-            </button>
+            </Button>
 
-            <button
-              type="button"
-              className="btn-outline"
+            <Button
+              variante="secondary"
               onClick={iniciar}
               disabled={
                 carregando ||
@@ -241,11 +240,10 @@ function Attendant({ aoSessaoExpirada }) {
               }
             >
               Iniciar atendimento
-            </button>
+            </Button>
 
-            <button
-              type="button"
-              className="btn-outline"
+            <Button
+              variante="secondary"
               onClick={finalizar}
               disabled={
                 carregando ||
@@ -254,11 +252,10 @@ function Attendant({ aoSessaoExpirada }) {
               }
             >
               Finalizar atendimento
-            </button>
+            </Button>
 
-            <button
-              type="button"
-              className="btn-outline"
+            <Button
+              variante="secondary"
               onClick={naoCompareceu}
               disabled={
                 carregando ||
@@ -268,16 +265,16 @@ function Attendant({ aoSessaoExpirada }) {
               }
             >
               Não compareceu
-            </button>
+            </Button>
           </div>
 
-          {carregando && <p role="status">Processando ação...</p>}
-          {erro && <p role="alert" className="atd-erro">{erro}</p>}
-          {erroAudio && <p role="alert" className="atd-erro">{erroAudio}</p>}
+          {carregando && <Message tipo="info">Processando ação...</Message>}
+          {erro && <Message tipo="error" className="atd-erro">{erro}</Message>}
+          {erroAudio && <Message tipo="error" className="atd-erro">{erroAudio}</Message>}
           {erroAtualizacao && (
-            <p role="alert" className="atd-erro">
+            <Message tipo="error" className="atd-erro">
               Não foi possível atualizar a fila: {erroAtualizacao}
-            </p>
+            </Message>
           )}
         </section>
       </div>
