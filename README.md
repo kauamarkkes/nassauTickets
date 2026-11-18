@@ -348,7 +348,7 @@ Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam opera
 
 * O backend só aceita novas emissões e chamadas das 7h às 17h pelo horário local do servidor; atendimentos já chamados podem ser concluídos depois. Para praticar fora desse horário, `DEMO_OUTSIDE_HOURS=true` no `.env` local funciona somente fora de produção. Senhas pendentes deixam de ser elegíveis após o expediente e no dia seguinte, mas ainda não recebem um estado histórico próprio de descarte.
 * O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
-* O áudio do painel depende de uma voz disponível no navegador e de um clique inicial em **Ativar som das chamadas**.
+* O painel tenta anunciar automaticamente novas chamadas. O áudio depende de uma voz disponível e das permissões de reprodução do navegador; ao abrir a página diretamente, pode ser necessário interagir com ela antes que o navegador permita a voz.
 * A integração completa com MySQL ainda precisa ser conferida em um ambiente com banco ativo.
 
 ## Branches e entrega

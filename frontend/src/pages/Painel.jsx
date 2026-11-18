@@ -41,7 +41,7 @@ function falar(texto, falaAtual, inicioPendente, informarErro) {
   fala.lang = "pt-BR";
   fala.voice = window.speechSynthesis.getVoices().find((voz) => voz.lang.toLowerCase() === "pt-br") ?? null;
   fala.onstart = () => informarErro("");
-  fala.onerror = () => informarErro("Não foi possível reproduzir a voz. Verifique o som e clique em Ativar som.");
+  fala.onerror = () => informarErro("Não foi possível reproduzir a voz. Verifique o som e permita áudio neste navegador.");
   fala.onend = () => { if (falaAtual.current === fala) falaAtual.current = null; };
   inicioPendente.current = setTimeout(() => window.speechSynthesis.speak(fala), 100);
 }
@@ -52,9 +52,7 @@ function Painel() {
   const [erro, setErro] = useState("");
   const [modoDemo, setModoDemo] = useState(false);
   const [tentativa, setTentativa] = useState(0);
-  const [somAtivo, setSomAtivo] = useState(false);
   const [erroAudio, setErroAudio] = useState("");
-  const somAtivoRef = useRef(false);
   const primeiraConsulta = useRef(true);
   const ultimaOrdem = useRef(0);
   const falaAtual = useRef(null);
@@ -70,7 +68,7 @@ function Painel() {
         const ordem = dados.atual?.ordemChamada ?? 0;
         if (primeiraConsulta.current) {
           primeiraConsulta.current = false;
-        } else if (somAtivoRef.current && ordem !== ultimaOrdem.current && dados.atual) {
+        } else if (ordem !== ultimaOrdem.current && dados.atual) {
           const senha = dados.atual;
           const prefixo = senha.status === "CHAMADA_NOVAMENTE" ? "Última chamada. " : "";
           falar(`${prefixo}Senha ${numeroFalado(senha.numero)}. Guichê ${senha.guiche}.`, falaAtual, inicioPendente, setErroAudio);
@@ -107,14 +105,6 @@ function Painel() {
   return (
     <main className="painel-page">
       <div className="painel-conteudo">
-        {!somAtivo && <button type="button" className="btn-outline" onClick={() => {
-          somAtivoRef.current = true;
-          setSomAtivo(true);
-          setErroAudio("");
-          falar("Áudio do painel ativado.", falaAtual, inicioPendente, setErroAudio);
-        }}>
-          Ativar som das chamadas
-        </button>}
         {erroAudio && <p role="alert">{erroAudio}</p>}
         {erro && (
           <p role="alert" className="chamada-erro">
