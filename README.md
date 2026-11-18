@@ -227,6 +227,7 @@ A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a vari
 | `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
 | `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
 | `GET`   | `/admin/resumo`                    | Totais, gráficos e cinco últimas chamadas do período filtrado; somente GESTOR. |
+| `GET`   | `/admin/relatorio`                  | Relatório detalhado e auditoria do período; somente GESTOR. |
 | `GET`   | `/admin/usuarios`                  | Listar usuários sem hashes; somente GESTOR. |
 | `POST`  | `/admin/usuarios`                  | Cadastrar usuário; somente GESTOR. |
 | `POST`  | `/admin/usuarios/redefinir-senha`  | Redefinir senha e encerrar sessões; somente GESTOR. |
@@ -269,6 +270,8 @@ As rotas `/admin/*` também exigem perfil `GESTOR` no servidor. Um atendente aut
 
 O painel do gestor filtra o resumo por `inicio` e `fim` no formato `AAAA-MM-DD` (período de até 366 dias), `tipo` (`SP`, `SG` ou `SE`), `status` e `guiche`. Sem filtros, mostra o dia atual. Os gráficos de barras por tipo, situação e dia usam os mesmos dados filtrados; a API devolve `porTipo`, `porStatus` e `porDia`. Exemplo: `GET /admin/resumo?inicio=2026-11-01&fim=2026-11-30&tipo=SP`. As consultas usam parâmetros no MySQL.
 
+`GET /admin/relatorio` recebe os mesmos filtros e devolve totais de senhas emitidas e atendidas, atendidas por tipo, tempo médio entre início e fim do atendimento e registros detalhados. Cada registro traz senha, tipo, situação, emissão, guichê, atendente e horários da primeira chamada, segunda chamada, início e fim. Campos sem atendimento ficam vazios.
+
 Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
 
 ## Regras de atendimento
@@ -303,6 +306,15 @@ Caso o cliente não compareça após duas chamadas, a senha pode ser registrada 
 NÃO_COMPARECEU
 ```
 
+## Evolução da AV1 para a AV2
+
+| Aspecto | AV1 | AV2 | Evidência |
+| --- | --- | --- | --- |
+| Senhas | Totem e atendimento com dados locais no navegador | API Express e persistência MySQL | commits `173eeaa`, `0be75fd` |
+| Painel | Chamadas locais | Consulta periódica de `/painel`, erros visíveis e contingência identificada | `c5a8f63`, `ef3a085` e código atual |
+| Acesso | Sem sessão | Login, cookie de sessão, rota protegida e logout | commits `6a7cf03`, `c9e86b2` |
+| Gestão | Sem área própria | Cadastro de usuários, indicadores filtráveis e relatório | commits `6daef89`, `488e24c` e código atual |
+
 ## Dados e persistência
 
 As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo `backend/data/senhas.json` é legado e não é lido nem gravado pelo servidor. Dados antigos existentes nele exigiriam migração separada antes de descartar o arquivo.
@@ -331,14 +343,12 @@ A sequência é reiniciada de acordo com a data.
 
 ## Limitações e próximos passos
 
-* Melhorar filtros e ordenação das informações.
-* Evoluir a validação dos formulários.
-* Implementar relatórios e informações de auditoria mais completas.
-* Evoluir o controle de expediente.
-* Adicionar tratamento de falhas e cenários de indisponibilidade da API.
-* Evoluir as funcionalidades previstas para a AV2.
+Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam operações. O painel oferece **Tentar novamente** e **Ver demonstração**; os dados locais são rotulados como demonstração e não representam chamadas reais. Quando a API volta, o painel retoma os dados do servidor.
 
-A AV2 manterá o mesmo tema e repositório e prevê autenticação, gerenciamento de sessão e rotas protegidas.
+* O expediente de 7h às 17h e o descarte formal de senhas pendentes ainda precisam ser aplicados no backend.
+* O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
+* O áudio do painel depende de uma voz disponível no navegador e de um clique inicial em **Ativar som das chamadas**.
+* A integração completa com MySQL ainda precisa ser conferida em um ambiente com banco ativo.
 
 ## Branches e entrega
 
