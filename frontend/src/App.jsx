@@ -47,7 +47,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="app-shell">
       <Header
         usuario={sessao.usuario}
         verificando={sessao.verificando}
@@ -55,9 +55,11 @@ function App() {
         saindo={saindo}
         erroSair={erroSair}
       />
-      <AppRoutes sessao={sessao} aoEntrar={aoEntrar} aoSessaoExpirada={aoSessaoExpirada} />
+      <div className="app-content">
+        <AppRoutes sessao={sessao} aoEntrar={aoEntrar} aoSessaoExpirada={aoSessaoExpirada} />
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }
 
