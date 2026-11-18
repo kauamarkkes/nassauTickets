@@ -182,9 +182,12 @@ export default function Admin({ aoSessaoExpirada }) {
   const dadosTipo = resumo ? Object.entries(resumo.porTipo).map(([chave, quantidade]) => ({
     chave, nome: `${nomesTipo[chave] ?? chave} (${chave})`, quantidade,
   })) : [];
-  const dadosStatus = resumo ? Object.entries(nomesStatus).map(([chave, nome]) => ({
-    chave, nome, quantidade: resumo.porStatus[chave] ?? 0,
-  })) : [];
+  const dadosStatus = resumo ? [
+    { chave: "AGUARDANDO", nome: "Aguardando", quantidade: (resumo.porStatus.EMITIDA ?? 0) + (resumo.porStatus.AGUARDANDO ?? 0) },
+    { chave: "EM_ANDAMENTO", nome: "Em andamento", quantidade: (resumo.porStatus.CHAMADA ?? 0) + (resumo.porStatus.CHAMADA_NOVAMENTE ?? 0) + (resumo.porStatus.EM_ATENDIMENTO ?? 0) },
+    { chave: "ATENDIDA", nome: "Atendidas", quantidade: resumo.porStatus.ATENDIDA ?? 0 },
+    { chave: "NÃO_COMPARECEU", nome: "Não compareceram", quantidade: resumo.porStatus["NÃO_COMPARECEU"] ?? 0 },
+  ] : [];
   const dadosDias = resumo ? resumo.porDia.map(({ data, quantidade }) => ({
     chave: data, nome: `${data.slice(4, 6)}/${data.slice(2, 4)}`, quantidade,
   })) : [];
@@ -229,8 +232,8 @@ export default function Admin({ aoSessaoExpirada }) {
                 ))}
               </div>
               <div className="admin-status-grid" aria-label="Senhas por situação">
-                {Object.entries(nomesStatus).map(([status, nome]) => (
-                  <div className="admin-status" key={status}><span>{nome}</span><strong>{resumo.porStatus[status] ?? 0}</strong></div>
+                {dadosStatus.map(({ chave, nome, quantidade }) => (
+                  <div className="admin-status" key={chave}><span>{nome}</span><strong>{quantidade}</strong></div>
                 ))}
               </div>
               <div className="admin-colunas admin-graficos-colunas">
