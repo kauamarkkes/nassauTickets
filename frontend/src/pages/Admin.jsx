@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../api";
 import "../styles/global.css";
 
@@ -42,6 +42,7 @@ export default function Admin({ aoSessaoExpirada }) {
   const [filtros, setFiltros] = useState(() => ({
     inicio: dataHoje(), fim: dataHoje(), tipo: "", status: "", guiche: "",
   }));
+  const filtrosAplicados = useRef(filtros);
   const [resumo, setResumo] = useState(null);
   const [relatorio, setRelatorio] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
@@ -63,7 +64,7 @@ export default function Admin({ aoSessaoExpirada }) {
 
   async function atualizar() {
     const [dadosResumo, dadosUsuarios, dadosFila] = await Promise.all([
-      apiRequest(caminhoResumo(filtros)), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
+      apiRequest(caminhoResumo(filtrosAplicados.current)), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
     ]);
     setResumo(dadosResumo);
     setUsuarios(dadosUsuarios);
@@ -73,7 +74,7 @@ export default function Admin({ aoSessaoExpirada }) {
   useEffect(() => {
     let ativo = true;
     Promise.all([
-      apiRequest("/admin/resumo"), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
+      apiRequest(caminhoResumo(filtrosAplicados.current)), apiRequest("/admin/usuarios"), apiRequest("/admin/fila"),
     ]).then(([dadosResumo, dadosUsuarios, dadosFila]) => {
       if (!ativo) return;
       setResumo(dadosResumo);
@@ -81,7 +82,16 @@ export default function Admin({ aoSessaoExpirada }) {
       setOrdem(dadosFila.proximoNaoPrioritario);
     }).catch((falha) => { if (ativo) tratarFalha(falha); })
       .finally(() => { if (ativo) setCarregando(false); });
-    return () => { ativo = false; };
+    const intervalo = setInterval(async () => {
+      const aplicados = filtrosAplicados.current;
+      try {
+        const dados = await apiRequest(caminhoResumo(aplicados));
+        if (ativo && aplicados === filtrosAplicados.current) setResumo(dados);
+      } catch (falha) {
+        if (ativo) tratarFalha(falha);
+      }
+    }, 10000);
+    return () => { ativo = false; clearInterval(intervalo); };
   }, [tratarFalha]);
 
   async function executar(operacao, sucesso) {
@@ -118,7 +128,9 @@ export default function Admin({ aoSessaoExpirada }) {
     setSalvando(true);
     setErro("");
     try {
-      setResumo(await apiRequest(caminhoResumo(filtros)));
+      const dados = await apiRequest(caminhoResumo(filtros));
+      filtrosAplicados.current = { ...filtros };
+      setResumo(dados);
       setRelatorio(null);
     } catch (falha) {
       tratarFalha(falha);
@@ -131,7 +143,7 @@ export default function Admin({ aoSessaoExpirada }) {
     setSalvando(true);
     setErro("");
     try {
-      setRelatorio(await apiRequest(caminhoResumo(filtros).replace("/admin/resumo", "/admin/relatorio")));
+      setRelatorio(await apiRequest(caminhoResumo(filtrosAplicados.current).replace("/admin/resumo", "/admin/relatorio")));
     } catch (falha) {
       tratarFalha(falha);
     } finally {
