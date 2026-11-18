@@ -1,1 +1,376 @@
 # nassauTickets
+
+Sistema web de controle de atendimento para um laboratório de análises clínicas. O cliente retira uma senha no Totem, o atendente controla as chamadas no guichê e o Painel mostra a chamada atual e as últimas senhas atendidas.
+
+Repositório: https://github.com/kauamarkkes/nassauTickets
+
+## Informações acadêmicas
+
+* **Curso:** Ciência da Computação
+* **Disciplina:** Back-end Frameworks
+* **Período:** 2026.2
+* **Instituição:** UNINASSAU – Graças
+* **Professor:** João Ferreira da Silva Junior
+* **Entrega atual:** AV2 (em desenvolvimento)
+
+## Problema e público-alvo
+
+Em um laboratório, os clientes precisam saber qual senha retirar, quando serão chamados e a qual guichê devem se dirigir. O nassauTickets organiza a fila de atendimento e apresenta as chamadas em uma interface para clientes e atendentes.
+
+O sistema é direcionado principalmente para laboratórios e ambientes de atendimento que precisam organizar filas, chamadas e o fluxo de atendimento dos clientes.
+
+## Membros
+
+| Nome           | Matrícula | Papel                        | Contribuição                                                            |
+| -------------- | --------- | ---------------------------- | ----------------------------------------------------------------------- |
+| Kauã Henrique  | 01846088  | Scrum Master / Desenvolvedor | Estrutura do projeto, rotas e integração.                               |
+| Lázaro Antonio | 01806289  | Desenvolvedor                | Layout, estilos e componentes.                                          |
+| João Erick     | 01849942  | Desenvolvedor                | Totem e emissão de senhas.                                              |
+| Bruno José     | 01847870  | Desenvolvedor                | Página inicial, Painel, Atendimento e integração das páginas com a API. |
+
+## Funcionalidades implementadas
+
+* Emissão de senhas SP (prioritária), SG (geral) e SE (retirada de exames).
+* Numeração das senhas por data e tipo.
+* Consulta das senhas emitidas.
+* Chamada da próxima senha no guichê.
+* Rechamada de senha.
+* Início e finalização do atendimento.
+* Registro de não comparecimento após duas chamadas.
+* Controle dos estados das senhas durante o atendimento.
+* Painel com a chamada atual e as últimas chamadas.
+* Contagem das senhas aguardando atendimento.
+* Comunicação entre as páginas React e a API Express.
+* Persistência das senhas em MySQL no backend.
+* Login de atendentes e gestores, com sessão e rotas protegidas.
+* Área de gestão com resumo do dia, cadastro de usuários, redefinição de senhas e ajuste da próxima chamada SE/SG.
+
+## Rotas do frontend
+
+| Rota           | Página                |
+| -------------- | --------------------- |
+| `/`            | Início                |
+| `/totem`       | Emissão de senhas     |
+| `/painel`      | Painel de chamadas    |
+| `/atendimento` | Terminal do atendente |
+| `/login`       | Login de atendentes e gestores |
+| `/admin`       | Gestão diária, usuários e fila (somente GESTOR) |
+
+## Tecnologias e arquitetura
+
+* **Frontend:** React, JavaScript, Vite, React Router e CSS.
+* **Backend:** Node.js, Express e CORS.
+* **Persistência:** MySQL 8.0 no backend.
+* **Comunicação:** API REST utilizando `fetch`.
+* **Desenvolvimento:** Nodemon, npm, Git e GitHub.
+
+O frontend realiza requisições HTTP para a API Express. O backend controla a fila, as chamadas, os estados das senhas e a persistência dos dados.
+
+A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`. O `server.js` expõe a API e `senhasRepository.js` executa as operações no MySQL.
+
+O contrato com exemplos de requisição, resposta, autenticação e erros está em `docs/requirements/contrato-api.md`.
+Os protótipos das telas estão em `docs/mockups/README.md`, os diagramas em `docs/models/uml/README.md` e os resultados de verificação em `docs/evidencias/README.md`. Uma visão geral da API, autenticação, rotas e componentes está em `docs/arquitetura/visao-geral.md`.
+
+## Estrutura do repositório
+
+```text
+nassauTickets/
+├── backend/
+│   └── src/
+│       └── server.js
+├── docs/
+│   ├── branding/
+│   ├── mer/
+│   ├── mockups/
+│   ├── models/
+│   │   └── uml/
+│   └── requirements/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       ├── routes/
+│       ├── styles/
+│       ├── api.js
+│       ├── storage.js
+│       └── main.jsx
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+As pastas de documentação vazias devem conter `.gitkeep` para aparecerem no GitHub.
+
+## Instalação e execução
+
+É necessário ter Node.js 22.9 ou superior da linha 22 LTS, npm, Git e acesso a um servidor MySQL 8.0 em execução. O frontend e o backend devem rodar em **terminais separados**.
+
+Clone o repositório:
+
+```cmd
+git clone https://github.com/kauamarkkes/nassauTickets.git
+cd nassauTickets
+```
+
+No primeiro terminal, instale as dependências do backend e copie o exemplo de configuração:
+
+```cmd
+cd backend
+npm install
+copy .env.example .env
+```
+
+No PowerShell, o equivalente à cópia é `Copy-Item .env.example .env`. Se a política do PowerShell bloquear `npm`, utilize `npm.cmd` nos comandos.
+
+Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco MySQL. Se o arquivo já existir, adicione `DB_NAME=nassauTickets`, preservando as credenciais existentes. Não envie esse arquivo ou suas credenciais ao GitHub ou à conversa.
+
+| Variável | Finalidade | Padrão |
+| --- | --- | --- |
+| `PORT` | Porta HTTP do Express | `3000` |
+| `DB_HOST` | Endereço do servidor MySQL | `127.0.0.1` |
+| `DB_PORT` | Porta do MySQL (1 a 65535) | `3306` |
+| `DB_USER` | Usuário MySQL com acesso ao servidor | Obrigatório |
+| `DB_PASSWORD` | Senha do usuário MySQL | Obrigatório |
+| `DB_NAME` | Banco existente que será selecionado pelo pool | Obrigatório; exemplo: `nassauTickets` |
+| `FRONTEND_ORIGIN` | Origem permitida para o frontend e requisições com sessão | `http://localhost:5173` |
+| `ENABLE_TEST_RESET` | Habilita redefinição de senha apenas no servidor local de teste | `false` |
+| `TEST_RESET_CODE` | Código de redefinição do teste local; mantenha só no `.env` | vazio |
+
+Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
+
+Antes da primeira execução, crie o banco vazio pelo editor SQL do MySQL Workbench, conectado ao mesmo servidor configurado no `.env`:
+
+```sql
+CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
+```
+
+Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
+
+Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC.
+
+Execute também `docs/mer/002_autenticacao.sql` para criar `atendentes` e `sessoes_atendentes`. O servidor exige essas tabelas para iniciar. Para cadastrar o primeiro atendente, execute em um terminal interativo dentro de `backend/`:
+
+Se o banco já existia antes da regra de encerramento, faça backup e execute `docs/mer/003_encerramento.sql` uma vez. O backend encerra automaticamente senhas ainda `EMITIDA` ou `AGUARDANDO` de dias anteriores. Elas passam a `ENCERRADA`, com horário registrado, e não entram no total de atendidas.
+
+```cmd
+node --env-file=.env scripts/createAttendant.js atendente "Atendente 01"
+```
+
+O comando pede a senha sem exibi-la e grava somente seu hash. Use pelo menos 12 caracteres. O terceiro argumento opcional é o perfil `GESTOR`; sem ele, o perfil é `ATENDENTE`. Não envie senhas ou hashes ao repositório.
+
+Se um atendente esquecer a senha, o responsável pelo banco pode redefini-la localmente, no mesmo terminal, sem precisar conhecer a senha antiga:
+
+```cmd
+node --env-file=.env scripts/createAttendant.js --reset atendente
+```
+
+O comando solicita e confirma uma nova senha de pelo menos 12 caracteres, substitui o hash da conta indicada e encerra suas sessões anteriores. O cadastro inicial também pede confirmação da senha. Essa opção pelo terminal continua disponível sem habilitar o modo de teste no navegador.
+
+Somente para testes locais, a opção **Esqueceu a senha?** abre `/redefinir-senha`. Para habilitá-la, defina `ENABLE_TEST_RESET=true` e `TEST_RESET_CODE` no `backend/.env` local. A rota `POST /auth/reset-test` aceita `{ "login", "codigo", "novaSenha" }`, substitui o hash e encerra as sessões do atendente. O backend só aceita essa rota de `localhost` e a desativa em produção, mesmo que as variáveis estejam presentes. Não coloque o código no repositório. No uso normal, um gestor autenticado pode redefinir a senha pela página `/admin`.
+
+Para abrir a área de gestão, cadastre o primeiro usuário com perfil `GESTOR` pelo script acima, passando `GESTOR` como terceiro argumento. Depois do login, o gestor pode cadastrar atendentes e outros gestores, redefinir senhas e consultar os números do dia. A redefinição encerra as sessões anteriores do usuário. Nenhuma senha é devolvida pela API.
+
+Inicie o backend, ainda no diretório `backend/`:
+
+```cmd
+npm run dev
+```
+
+O backend usa `mysql2/promise` com um pool compartilhado de até cinco conexões e tempo limite de conexão de dez segundos. O pool seleciona o banco indicado em `DB_NAME`. Antes de abrir a porta HTTP, confirma a conexão e a linha de controle da fila. Se o banco ou o esquema não estiver pronto, a inicialização falha. Todas as rotas de senhas e atendimento usam MySQL.
+
+Com a conexão validada, a API ficará disponível em:
+
+```text
+http://localhost:3000
+```
+
+Também é possível iniciar o backend com:
+
+```cmd
+npm start
+```
+
+Para verificar manualmente, abra `http://localhost:3000/`: a resposta deve continuar sendo `{"mensagem":"API nassauTickets funcionando"}`. Encerre com `Ctrl+C` para fechar o servidor HTTP e o pool MySQL.
+
+Se o MySQL estiver indisponível ou as credenciais forem inválidas, a API não abrirá a porta HTTP e o processo terminará com erro. No modo de desenvolvimento, o Nodemon poderá permanecer aguardando alterações; após corrigir o ambiente, reinicie o comando. O log mostra o código do erro sem exibir as credenciais:
+
+- `DB_CONFIG_INVALID`: preencha usuário, senha e nome do banco e confira a porta MySQL.
+- `ECONNREFUSED`: confirme que o MySQL está iniciado e ouvindo no endereço e porta configurados.
+- `ER_ACCESS_DENIED_ERROR`: confira usuário, senha e permissão de acesso a partir deste computador.
+- `ER_BAD_DB_ERROR`: confira `DB_NAME` e se o banco existe no servidor configurado.
+- `ER_DBACCESS_DENIED_ERROR`: confira a permissão do usuário para acessar o banco selecionado.
+- `ENOTFOUND` ou `ETIMEDOUT`: confira endereço, rede e disponibilidade do servidor.
+- `EADDRINUSE`: a porta HTTP já está sendo usada por outro processo.
+
+No segundo terminal, a partir da raiz `nassauTickets`, inicie o frontend:
+
+```cmd
+cd frontend
+npm install
+npm run dev
+```
+
+Abra o endereço informado pelo Vite, normalmente:
+
+```text
+http://localhost:5173
+```
+
+O backend precisa estar em execução para que o frontend possa emitir, consultar e controlar as senhas.
+
+A URL padrão da API é `http://localhost:3000`. O frontend pode utilizar a variável `VITE_API_URL` para configurar outra URL.
+
+## Rotas da API
+
+| Método  | Rota                               | Finalidade                                     |
+| ------- | ---------------------------------- | ---------------------------------------------- |
+| `GET`   | `/`                                | Verificar se a API está funcionando.           |
+| `POST`  | `/auth/login`                      | Autenticar atendente e criar sessão.            |
+| `GET`   | `/auth/session`                    | Consultar a sessão autenticada.                 |
+| `POST`  | `/auth/logout`                     | Encerrar a sessão.                              |
+| `POST`  | `/auth/reset-test`                 | Redefinir senha somente no teste local habilitado. |
+| `GET`   | `/admin/resumo`                    | Totais, gráficos e cinco últimas chamadas do período filtrado; somente GESTOR. |
+| `GET`   | `/admin/relatorio`                  | Relatório detalhado e auditoria do período; somente GESTOR. |
+| `GET`   | `/admin/usuarios`                  | Listar usuários sem hashes; somente GESTOR. |
+| `POST`  | `/admin/usuarios`                  | Cadastrar usuário; somente GESTOR. |
+| `POST`  | `/admin/usuarios/redefinir-senha`  | Redefinir senha e encerrar sessões; somente GESTOR. |
+| `GET`   | `/admin/fila`                      | Consultar o próximo tipo não prioritário; somente GESTOR. |
+| `PUT`   | `/admin/fila`                      | Escolher SE ou SG como próximo tipo não prioritário; somente GESTOR. |
+| `GET`   | `/senhas`                          | Listar todas as senhas.                        |
+| `POST`  | `/senhas`                          | Emitir uma nova senha.                         |
+| `POST`  | `/atendimentos/proxima`            | Chamar a próxima senha.                        |
+| `PATCH` | `/senhas/:numero/iniciar`          | Iniciar o atendimento.                         |
+| `PATCH` | `/senhas/:numero/finalizar`        | Finalizar o atendimento.                       |
+| `POST`  | `/senhas/:numero/chamar-novamente` | Realizar uma nova chamada.                     |
+| `PATCH` | `/senhas/:numero/nao-compareceu`   | Registrar não comparecimento.                  |
+| `GET`   | `/painel`                          | Consultar chamada atual e chamadas anteriores. |
+
+Para emitir uma senha, a API recebe o tipo:
+
+```json
+{
+  "tipo": "SP"
+}
+```
+
+Os tipos disponíveis são:
+
+* `SP` — prioritária
+* `SG` — geral
+* `SE` — retirada de exames
+
+As rotas que utilizam `:numero` devem receber o número completo da senha, por exemplo:
+
+```text
+/senhas/261004-SP001/iniciar
+```
+
+A API retorna respostas de erro em JSON para entradas inválidas, senha não encontrada, fila vazia ou ações incompatíveis com o estado atual da senha. `GET /senhas` e as operações de atendimento exigem sessão; a emissão no totem e o painel continuam públicos.
+
+O login recebe `{"login":"atendente","senha":"..."}` e, se válido, retorna `{"usuario":{"id":1,"login":"atendente","nome":"Atendente 01","perfil":"ATENDENTE"}}` com cookie de sessão `HttpOnly`, `SameSite=Lax` e duração de oito horas. O navegador deve enviar requisições com `credentials: "include"`; `/auth/session` devolve o mesmo objeto de usuário após recarregar a página. `/auth/logout` invalida a sessão no servidor. Credenciais inválidas ou sessão ausente retornam `401`; uma origem HTTP não permitida retorna `403`. O cookie recebe `Secure` quando `NODE_ENV=production`, exigindo HTTPS.
+
+As rotas `/admin/*` também exigem perfil `GESTOR` no servidor. Um atendente autenticado recebe `403`. O cadastro recebe `{ "login", "nome", "perfil", "senha" }`, com perfil `ATENDENTE` ou `GESTOR` e senha de pelo menos 12 caracteres. A redefinição recebe `{ "login", "novaSenha" }`. A configuração da fila recebe `{ "proximoNaoPrioritario": "SE" }` ou `SG`: ela escolhe o próximo tipo não prioritário, mantendo a alternância com SP e entre SE/SG nas chamadas seguintes.
+
+O painel do gestor filtra o resumo por `inicio` e `fim` no formato `AAAA-MM-DD` (período de até 366 dias), `tipo` (`SP`, `SG` ou `SE`), `status` e `guiche`. Sem filtros, mostra o dia atual. Os gráficos de barras por tipo, situação e dia usam os mesmos dados filtrados; a API devolve `porTipo`, `porStatus` e `porDia`. Exemplo: `GET /admin/resumo?inicio=2026-11-01&fim=2026-11-30&tipo=SP`. As consultas usam parâmetros no MySQL.
+
+`GET /admin/relatorio` recebe os mesmos filtros e devolve totais de senhas emitidas e atendidas, atendidas por tipo, tempo médio entre início e fim do atendimento e registros detalhados. Cada registro traz senha, tipo, situação, emissão, guichê, atendente e horários da primeira chamada, segunda chamada, início e fim. Campos sem atendimento ficam vazios.
+
+Para explicar o fluxo: o atendente informa login e senha; o servidor compara a senha com o hash do banco; se estiver correta, cria uma sessão com validade de oito horas; o navegador envia o cookie nas próximas requisições; o logout apaga a sessão. O banco guarda apenas o hash da senha e o hash do identificador da sessão. `backend/src/auth/password.js` cuida da comparação da senha, `backend/src/auth/session.js` cuida das sessões e `backend/src/server.js` expõe as rotas. O script `backend/scripts/createAttendant.js` serve apenas para cadastrar um atendente pelo terminal, digitando a senha sem exibi-la.
+
+## Regras de atendimento
+
+O sistema utiliza uma sequência de atendimento que prioriza as senhas preferenciais e alterna com os demais tipos.
+
+A sequência segue a regra:
+
+```text
+SP → SE/SG → SP → SE/SG
+```
+
+As senhas possuem estados que representam seu ciclo de atendimento:
+
+```text
+EMITIDA
+   ↓
+AGUARDANDO
+   ↓
+CHAMADA
+   ↓
+CHAMADA_NOVAMENTE
+   ↓
+EM_ATENDIMENTO
+   ↓
+ATENDIDA
+```
+
+Caso o cliente não compareça após duas chamadas, a senha pode ser registrada como:
+
+```text
+NÃO_COMPARECEU
+```
+
+## Evolução da AV1 para a AV2
+
+| Aspecto | AV1 | AV2 | Evidência |
+| --- | --- | --- | --- |
+| Senhas | Totem e atendimento com dados locais no navegador | API Express e persistência MySQL | commits `173eeaa`, `0be75fd` |
+| Painel | Chamadas locais | Consulta periódica de `/painel`, erros visíveis e contingência identificada | `c5a8f63`, `ef3a085` e código atual |
+| Acesso | Sem sessão | Login, cookie de sessão, rota protegida e logout | commits `6a7cf03`, `c9e86b2` |
+| Gestão | Sem área própria | Cadastro de usuários, indicadores filtráveis e relatório disponível pela API | commits `6daef89`, `488e24c` e código atual; a seção de relatório foi retirada da interface |
+
+## Dados e persistência
+
+As senhas são armazenadas na tabela `senhas`, e a sequência de chamadas na tabela `estado_fila`. O arquivo JSON usado no protótipo da AV1 foi retirado do backend na AV2; a API atual lê e grava apenas no MySQL.
+
+O módulo `backend/src/auth/password.js` gera hashes com `scrypt` e salt aleatório. Usuários ficam em `atendentes`; a tabela `sessoes_atendentes` guarda apenas o hash do identificador aleatório enviado no cookie. Nenhum usuário é criado automaticamente. A página `/login` envia as credenciais à API e redireciona para `/atendimento`; o navegador envia o cookie nas requisições seguintes. Ao recarregar, o React consulta `/auth/session`, protege `/atendimento` e troca o link Entrar pelo botão Sair enquanto houver sessão. O botão Sair invalida a sessão no servidor. Se uma requisição protegida do atendimento ou da área admin retornar `401`, o React limpa a sessão e volta ao login com uma mensagem para entrar novamente.
+
+A numeração segue o formato:
+
+```text
+YYMMDD-PPSQ
+```
+
+Exemplo:
+
+```text
+261004-SP001
+```
+
+Onde:
+
+* `YYMMDD` representa a data.
+* `PP` representa o tipo da senha.
+* `SQ` representa a sequência numérica.
+
+A sequência é reiniciada de acordo com a data.
+
+## Limitações e próximos passos
+
+Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam operações. O painel oferece **Tentar novamente** e **Ver demonstração**; os dados locais são rotulados como demonstração e não representam chamadas reais. Quando a API volta, o painel retoma os dados do servidor.
+
+* Emissão e chamada estão disponíveis a qualquer hora. Senhas pendentes de dias anteriores recebem `ENCERRADA` quando o backend está em execução ou ao iniciar novamente.
+* O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
+* O painel tenta anunciar automaticamente novas chamadas. O áudio depende de uma voz disponível e das permissões de reprodução do navegador; ao abrir a página diretamente, pode ser necessário interagir com ela antes que o navegador permita a voz.
+* A integração MySQL foi conferida nesta máquina com consultas reais; a instalação em outros computadores depende da configuração local do banco e dos scripts SQL.
+
+## Branches e entrega
+
+O desenvolvimento ocorre na branch `dev`. Após revisão, o código é integrado à `main` por merge.
+
+Os commits devem registrar etapas reais do desenvolvimento e permitir identificar as contribuições dos integrantes.
+
+A entrega final deve informar:
+
+* URL do repositório;
+* commit avaliado;
+* tag de entrega definida pela equipe, após a revisão na `main`.
+
+## Uso de inteligência artificial
+
+O grupo utilizou ChatGPT como apoio para compreender erros, discutir a estrutura do projeto, sugerir trechos de código e revisar a documentação.
+
+As sugestões foram conferidas e testadas pelos integrantes, que são responsáveis pela implementação, funcionamento e apresentação do projeto.
+
+## Licença
+
+MIT. Consulte o arquivo `LICENSE` na raiz do repositório.
