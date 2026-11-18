@@ -268,7 +268,8 @@ export async function marcarNaoCompareceuNaTransacao(conexao, numero) {
 
 export async function obterPainel() {
   const [linhas] = await obterPool().execute(
-    `SELECT ${COLUNAS} FROM senhas WHERE ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 6`
+    `SELECT ${COLUNAS} FROM senhas WHERE data_emissao = ? AND ordem_chamada > 0 ORDER BY ordem_chamada DESC LIMIT 5`,
+    [dataLocal(new Date())]
   );
   const senhas = linhas.map(formatarSenha);
   return { atual: senhas[0] ?? null, anteriores: senhas.slice(1) };
