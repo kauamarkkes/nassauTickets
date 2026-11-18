@@ -36,6 +36,15 @@ function validarData(valor) {
   return data;
 }
 
+function montarConsulta(inicio, fim, { tipo, status, guiche }) {
+  const condicoes = ["data_emissao BETWEEN ? AND ?"];
+  const parametros = [inicio.slice(2).replaceAll("-", ""), fim.slice(2).replaceAll("-", "")];
+  if (tipo) { condicoes.push("tipo = ?"); parametros.push(tipo); }
+  if (status) { condicoes.push("status = ?"); parametros.push(status); }
+  if (guiche) { condicoes.push("guiche = ?"); parametros.push(Number(guiche)); }
+  return { onde: `WHERE ${condicoes.join(" AND ")}`, parametros };
+}
+
 export async function obterResumoDia(banco = obterPool(), filtros = {}) {
   const inicio = filtros.inicio || hojeLocal();
   const fim = filtros.fim || inicio;
@@ -51,12 +60,7 @@ export async function obterResumoDia(banco = obterPool(), filtros = {}) {
   if (guiche && (!/^\d{1,5}$/.test(String(guiche)) || Number(guiche) < 1 || Number(guiche) > 65535)) {
     throw falha(400, "Guichê inválido.");
   }
-  const condicoes = ["data_emissao BETWEEN ? AND ?"];
-  const parametros = [inicio.slice(2).replaceAll("-", ""), fim.slice(2).replaceAll("-", "")];
-  if (tipo) { condicoes.push("tipo = ?"); parametros.push(tipo); }
-  if (status) { condicoes.push("status = ?"); parametros.push(status); }
-  if (guiche) { condicoes.push("guiche = ?"); parametros.push(Number(guiche)); }
-  const onde = `WHERE ${condicoes.join(" AND ")}`;
+  const { onde, parametros } = montarConsulta(inicio, fim, { tipo, status, guiche });
   const [grupos] = await banco.execute(
     `SELECT tipo, status, COUNT(*) AS quantidade FROM senhas ${onde} GROUP BY tipo, status`,
     parametros
@@ -93,16 +97,12 @@ export async function obterResumoDia(banco = obterPool(), filtros = {}) {
 
 export async function obterRelatorio(banco = obterPool(), filtros = {}) {
   const resumo = await obterResumoDia(banco, filtros);
-  const condicoes = ["data_emissao BETWEEN ? AND ?"];
-  const parametros = [resumo.inicio.slice(2).replaceAll("-", ""), resumo.fim.slice(2).replaceAll("-", "")];
-  if (filtros.tipo) { condicoes.push("tipo = ?"); parametros.push(filtros.tipo); }
-  if (filtros.status) { condicoes.push("status = ?"); parametros.push(filtros.status); }
-  if (filtros.guiche) { condicoes.push("guiche = ?"); parametros.push(Number(filtros.guiche)); }
+  const { onde, parametros } = montarConsulta(resumo.inicio, resumo.fim, filtros);
   const [detalhes] = await banco.execute(
     `SELECT numero, tipo, status, emitida_em, guiche, atendente,
       primeira_chamada_em, segunda_chamada_em, inicio_atendimento_em, finalizacao_em, encerrada_em,
       TIMESTAMPDIFF(SECOND, inicio_atendimento_em, finalizacao_em) AS duracao_segundos
-     FROM senhas WHERE ${condicoes.join(" AND ")} ORDER BY data_emissao DESC, numero DESC`,
+     FROM senhas ${onde} ORDER BY data_emissao DESC, numero DESC`,
     parametros
   );
   const atendidasPorTipo = { SP: 0, SG: 0, SE: 0 };
