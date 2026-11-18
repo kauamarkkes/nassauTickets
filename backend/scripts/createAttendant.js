@@ -1,6 +1,6 @@
 import { emitKeypressEvents } from "node:readline";
-import { obterPool, encerrarPool } from "../src/db.js";
-import { gerarHashSenha } from "../src/auth/password.js";
+import { encerrarPool } from "../src/db.js";
+import { criarUsuario } from "../src/adminRepository.js";
 import { redefinirSenhaAtendente } from "../src/auth/resetPassword.js";
 
 const argumentos = process.argv.slice(2);
@@ -50,15 +50,11 @@ if (!/^[a-zA-Z0-9._-]{3,80}$/.test(login ?? "") ||
       await redefinirSenhaAtendente(login, senha);
       console.log(`Senha do atendente ${login} redefinida.`);
     } else {
-      const hash = await gerarHashSenha(senha);
-      await obterPool().execute(
-        "INSERT INTO atendentes (login, nome, senha_hash, perfil) VALUES (?, ?, ?, ?)",
-        [login, nome, hash, perfil]
-      );
+      await criarUsuario({ login, nome, perfil, senha });
       console.log(`Atendente ${login} cadastrado.`);
     }
   } catch (erro) {
-    console.error(erro.code === "ER_DUP_ENTRY" ? "Este login já existe." : erro.message);
+    console.error(erro.message);
     process.exitCode = 1;
   } finally {
     await encerrarPool();
