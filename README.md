@@ -69,7 +69,7 @@ O frontend realiza requisições HTTP para a API Express. O backend controla a f
 A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`. O `server.js` expõe a API e `senhasRepository.js` executa as operações no MySQL.
 
 O contrato com exemplos de requisição, resposta, autenticação e erros está em `docs/requirements/contrato-api.md`.
-Os protótipos das telas estão em `docs/mockups/README.md`, os diagramas em `docs/models/uml/README.md` e os resultados de verificação em `docs/evidencias/README.md`.
+Os protótipos das telas estão em `docs/mockups/README.md`, os diagramas em `docs/models/uml/README.md` e os resultados de verificação em `docs/evidencias/README.md`. Uma visão geral da API, autenticação, rotas e componentes está em `docs/arquitetura/visao-geral.md`.
 
 ## Estrutura do repositório
 
@@ -316,7 +316,7 @@ NÃO_COMPARECEU
 | Senhas | Totem e atendimento com dados locais no navegador | API Express e persistência MySQL | commits `173eeaa`, `0be75fd` |
 | Painel | Chamadas locais | Consulta periódica de `/painel`, erros visíveis e contingência identificada | `c5a8f63`, `ef3a085` e código atual |
 | Acesso | Sem sessão | Login, cookie de sessão, rota protegida e logout | commits `6a7cf03`, `c9e86b2` |
-| Gestão | Sem área própria | Cadastro de usuários, indicadores filtráveis e relatório | commits `6daef89`, `488e24c` e código atual |
+| Gestão | Sem área própria | Cadastro de usuários, indicadores filtráveis e relatório disponível pela API | commits `6daef89`, `488e24c` e código atual; a seção de relatório foi retirada da interface |
 
 ## Dados e persistência
 
