@@ -68,6 +68,8 @@ O frontend realiza requisições HTTP para a API Express. O backend controla a f
 
 A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`. O `server.js` expõe a API e `senhasRepository.js` executa as operações no MySQL.
 
+O contrato com exemplos de requisição, resposta, autenticação e erros está em `docs/requirements/contrato-api.md`.
+
 ## Estrutura do repositório
 
 ```text
