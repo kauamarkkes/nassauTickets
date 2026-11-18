@@ -43,6 +43,7 @@ export default function Admin({ aoSessaoExpirada }) {
     inicio: dataHoje(), fim: dataHoje(), tipo: "", status: "", guiche: "",
   }));
   const [resumo, setResumo] = useState(null);
+  const [relatorio, setRelatorio] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [ordem, setOrdem] = useState("SE");
   const [novo, setNovo] = useState({ login: "", nome: "", perfil: "ATENDENTE", senha: "" });
@@ -118,6 +119,19 @@ export default function Admin({ aoSessaoExpirada }) {
     setErro("");
     try {
       setResumo(await apiRequest(caminhoResumo(filtros)));
+      setRelatorio(null);
+    } catch (falha) {
+      tratarFalha(falha);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  async function carregarRelatorio() {
+    setSalvando(true);
+    setErro("");
+    try {
+      setRelatorio(await apiRequest(caminhoResumo(filtros).replace("/admin/resumo", "/admin/relatorio")));
     } catch (falha) {
       tratarFalha(falha);
     } finally {
@@ -212,6 +226,28 @@ export default function Admin({ aoSessaoExpirada }) {
                 <section className="admin-secao" aria-labelledby="grafico-status"><span className="admin-sobretitulo">GRÁFICO</span><h3 id="grafico-status">Por situação</h3><GraficoBarras dados={dadosStatus} vazio="Sem senhas neste período." /></section>
               </div>
               <section className="admin-secao admin-grafico-dias" aria-labelledby="grafico-dias"><span className="admin-sobretitulo">GRÁFICO</span><h3 id="grafico-dias">Emissões por dia</h3><GraficoBarras dados={dadosDias} vazio="Nenhuma senha emitida no período." /></section>
+            </>}
+          </section>
+
+          <section className="admin-secao" aria-labelledby="relatorio-titulo">
+            <div className="admin-secao-cabecalho">
+              <div><span className="admin-sobretitulo">RELATÓRIO</span><h2 id="relatorio-titulo">Senhas e auditoria do período</h2></div>
+              <button type="button" className="admin-botao-secundario" onClick={carregarRelatorio} disabled={salvando}>Carregar relatório</button>
+            </div>
+            {relatorio && <>
+              <p>Emitidas: {relatorio.total} · Atendidas: {relatorio.atendidas} · Tempo médio: {relatorio.tempoMedioMinutos === null ? "sem dados" : `${relatorio.tempoMedioMinutos} min`}</p>
+              <p>Atendidas por tipo: SP {relatorio.atendidasPorTipo.SP} · SG {relatorio.atendidasPorTipo.SG} · SE {relatorio.atendidasPorTipo.SE}</p>
+              {relatorio.detalhes.length === 0 ? <p className="admin-vazio">Nenhuma senha no período.</p> : (
+                <div className="admin-tabela-rolagem"><table className="admin-tabela">
+                  <thead><tr><th>Senha</th><th>Tipo</th><th>Situação</th><th>Emissão</th><th>Guichê</th><th>Atendente</th><th>1ª chamada</th><th>2ª chamada</th><th>Início</th><th>Fim</th></tr></thead>
+                  <tbody>{relatorio.detalhes.map((senha) => <tr key={senha.numero}>
+                    <td>{senha.numero}</td><td>{senha.tipo}</td><td>{senha.status.replaceAll("_", " ")}</td>
+                    <td>{senha.emitida_em}</td><td>{senha.guiche ?? ""}</td><td>{senha.atendente ?? ""}</td>
+                    <td>{senha.primeira_chamada_em ?? ""}</td><td>{senha.segunda_chamada_em ?? ""}</td>
+                    <td>{senha.inicio_atendimento_em ?? ""}</td><td>{senha.finalizacao_em ?? ""}</td>
+                  </tr>)}</tbody>
+                </table></div>
+              )}
             </>}
           </section>
 

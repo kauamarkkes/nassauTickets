@@ -91,6 +91,39 @@ export async function obterResumoDia(banco = obterPool(), filtros = {}) {
   };
 }
 
+export async function obterRelatorio(banco = obterPool(), filtros = {}) {
+  const resumo = await obterResumoDia(banco, filtros);
+  const condicoes = ["data_emissao BETWEEN ? AND ?"];
+  const parametros = [resumo.inicio.slice(2).replaceAll("-", ""), resumo.fim.slice(2).replaceAll("-", "")];
+  if (filtros.tipo) { condicoes.push("tipo = ?"); parametros.push(filtros.tipo); }
+  if (filtros.status) { condicoes.push("status = ?"); parametros.push(filtros.status); }
+  if (filtros.guiche) { condicoes.push("guiche = ?"); parametros.push(Number(filtros.guiche)); }
+  const [detalhes] = await banco.execute(
+    `SELECT numero, tipo, status, emitida_em, guiche, atendente,
+      primeira_chamada_em, segunda_chamada_em, inicio_atendimento_em, finalizacao_em,
+      TIMESTAMPDIFF(SECOND, inicio_atendimento_em, finalizacao_em) AS duracao_segundos
+     FROM senhas WHERE ${condicoes.join(" AND ")} ORDER BY data_emissao DESC, numero DESC`,
+    parametros
+  );
+  const atendidasPorTipo = { SP: 0, SG: 0, SE: 0 };
+  let somaSegundos = 0;
+  let comDuracao = 0;
+  for (const senha of detalhes) {
+    if (senha.status === "ATENDIDA") atendidasPorTipo[senha.tipo] += 1;
+    if (senha.status === "ATENDIDA" && senha.duracao_segundos !== null) {
+      somaSegundos += Number(senha.duracao_segundos);
+      comDuracao += 1;
+    }
+  }
+  return {
+    ...resumo,
+    atendidas: Object.values(atendidasPorTipo).reduce((soma, quantidade) => soma + quantidade, 0),
+    atendidasPorTipo,
+    tempoMedioMinutos: comDuracao ? Math.round((somaSegundos / comDuracao / 60) * 10) / 10 : null,
+    detalhes,
+  };
+}
+
 export async function listarUsuarios(banco = obterPool()) {
   const [usuarios] = await banco.execute(
     "SELECT id, login, nome, perfil, ativo FROM atendentes ORDER BY nome, login"

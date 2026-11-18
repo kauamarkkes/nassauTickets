@@ -5,7 +5,7 @@ import cors from "cors";
 import { verificarConexao, encerrarPool, obterPool } from "./db.js";
 import { redefinirSenhaAtendente } from "./auth/resetPassword.js";
 import {
-  obterResumoDia, listarUsuarios, criarUsuario, redefinirSenhaUsuario,
+  obterResumoDia, obterRelatorio, listarUsuarios, criarUsuario, redefinirSenhaUsuario,
   obterOrdemFila, definirOrdemFila,
 } from "./adminRepository.js";
 import {
@@ -139,6 +139,7 @@ app.post("/auth/reset-test", rota(async (req) => {
 }));
 
 app.get("/admin/resumo", rotaGestor(async (req) => ({ dados: await obterResumoDia(obterPool(), req.query) })));
+app.get("/admin/relatorio", rotaGestor(async (req) => ({ dados: await obterRelatorio(obterPool(), req.query) })));
 app.get("/admin/usuarios", rotaGestor(async () => ({ dados: await listarUsuarios() })));
 app.post("/admin/usuarios", rotaGestor(async (req) => ({
   status: 201, dados: await criarUsuario(req.body),
