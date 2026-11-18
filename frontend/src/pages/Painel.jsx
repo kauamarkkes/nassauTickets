@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { obterPainel } from "../storage";
+import { numeroFalado } from "../numeroFalado";
 import "../styles/global.css";
 
 const nomeTipo = {
@@ -72,7 +73,7 @@ function Painel() {
         } else if (somAtivoRef.current && ordem !== ultimaOrdem.current && dados.atual) {
           const senha = dados.atual;
           const prefixo = senha.status === "CHAMADA_NOVAMENTE" ? "Última chamada. " : "";
-          falar(`${prefixo}Senha ${nomeTipo[senha.tipo] ?? senha.tipo}, ${senha.numero.slice(-3)}. Guichê ${senha.guiche}.`, falaAtual, inicioPendente, setErroAudio);
+          falar(`${prefixo}Senha ${numeroFalado(senha.numero)}. Guichê ${senha.guiche}.`, falaAtual, inicioPendente, setErroAudio);
         }
         ultimaOrdem.current = ordem;
         setPainel({
@@ -90,10 +91,13 @@ function Painel() {
 
     const inicial = setTimeout(atualizar, 0);
     const intervalo = setInterval(atualizar, 2000);
+    const canal = "BroadcastChannel" in window ? new BroadcastChannel("nassauTickets-chamadas") : null;
+    if (canal) canal.onmessage = atualizar;
     return () => {
       ativo = false;
       clearTimeout(inicial);
       clearInterval(intervalo);
+      canal?.close();
       pararFala(falaAtual, inicioPendente);
     };
   }, [tentativa]);
@@ -103,14 +107,14 @@ function Painel() {
   return (
     <main className="painel-page">
       <div className="painel-conteudo">
-        <button type="button" className="btn-outline" onClick={() => {
+        {!somAtivo && <button type="button" className="btn-outline" onClick={() => {
           somAtivoRef.current = true;
           setSomAtivo(true);
           setErroAudio("");
           falar("Áudio do painel ativado.", falaAtual, inicioPendente, setErroAudio);
         }}>
-          {somAtivo ? "Testar som" : "Ativar som das chamadas"}
-        </button>
+          Ativar som das chamadas
+        </button>}
         {erroAudio && <p role="alert">{erroAudio}</p>}
         {erro && (
           <p role="alert" className="chamada-erro">

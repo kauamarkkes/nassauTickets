@@ -7,6 +7,7 @@ import {
   chamarNovamente,
   marcarNaoCompareceu,
 } from "../storage";
+import { numeroFalado } from "../numeroFalado";
 import "../styles/global.css";
 
 const STATUS_ATIVOS = ["CHAMADA", "CHAMADA_NOVAMENTE", "EM_ATENDIMENTO"];
@@ -31,6 +32,30 @@ function Attendant({ aoSessaoExpirada }) {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [erroAtualizacao, setErroAtualizacao] = useState("");
+  const [erroAudio, setErroAudio] = useState("");
+
+  function anunciarChamada(senha) {
+    try {
+      if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) {
+        throw new Error("Este navegador não oferece áudio.");
+      }
+      const prefixo = senha.status === "CHAMADA_NOVAMENTE" ? "Última chamada. " : "";
+      const fala = new SpeechSynthesisUtterance(`${prefixo}Senha ${numeroFalado(senha.numero)}. Guichê ${senha.guiche}.`);
+      fala.lang = "pt-BR";
+      fala.onerror = () => setErroAudio("A chamada foi registrada, mas o navegador não reproduziu o áudio.");
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(fala);
+      setErroAudio("");
+    } catch {
+      setErroAudio("A chamada foi registrada, mas o áudio não pôde ser reproduzido neste navegador.");
+    }
+
+    if ("BroadcastChannel" in window) {
+      const canal = new BroadcastChannel("nassauTickets-chamadas");
+      canal.postMessage(senha.ordemChamada);
+      canal.close();
+    }
+  }
 
   const atualizarSenhas = useCallback(async () => {
     try {
@@ -77,12 +102,13 @@ function Attendant({ aoSessaoExpirada }) {
     setGuiche(valor === "" ? NaN : Number(valor));
   }
 
-  async function executar(acao) {
+  async function executar(acao, aoSucesso) {
     setErro("");
     setCarregando(true);
 
     try {
-      await acao();
+      const resultado = await acao();
+      aoSucesso?.(resultado);
       await atualizarSenhas();
     } catch (error) {
       if (error.status === 401) {
@@ -98,12 +124,12 @@ function Attendant({ aoSessaoExpirada }) {
 
   function chamarProximaSenha() {
     if (!guicheValido) return;
-    executar(() => chamarProxima(guiche));
+    executar(() => chamarProxima(guiche), anunciarChamada);
   }
 
   function chamarNovamenteSenha() {
     if (!senhaAtual) return;
-    executar(() => chamarNovamente(senhaAtual.numero));
+    executar(() => chamarNovamente(senhaAtual.numero), anunciarChamada);
   }
 
   function iniciar() {
@@ -246,6 +272,7 @@ function Attendant({ aoSessaoExpirada }) {
 
           {carregando && <p role="status">Processando ação...</p>}
           {erro && <p role="alert" className="atd-erro">{erro}</p>}
+          {erroAudio && <p role="alert" className="atd-erro">{erroAudio}</p>}
           {erroAtualizacao && (
             <p role="alert" className="atd-erro">
               Não foi possível atualizar a fila: {erroAtualizacao}
