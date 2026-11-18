@@ -13,6 +13,6 @@ Verificações realizadas em 18/11/2026 nesta máquina, com MySQL local. Não h�
 | `GET /` e `GET /painel` | HTTP 200; o painel retornou a chamada atual |
 | `GET /senhas` e `GET /admin/resumo` sem sessão | HTTP 401 |
 
-O backup local foi guardado na pasta temporária do Windows, fora do repositório. A senha de hoje continuou `AGUARDANDO` porque o expediente ainda não havia terminado; o backend a encerrará depois das 17h quando estiver em execução, ou ao iniciar novamente após esse horário.
+O backup local foi guardado na pasta temporária do Windows, fora do repositório. A senha do dia da verificação continuou `AGUARDANDO`; pela regra atual, ela será encerrada somente no dia seguinte se não for atendida.
 
 Ainda requer conferência presencial: reprodução do áudio no Painel após remover o botão, e fluxo completo autenticado no navegador (login, chamada, rechamada, atendimento e relatório). Essas ações dependem de interação e áudio do navegador; não são declaradas como verificadas aqui.

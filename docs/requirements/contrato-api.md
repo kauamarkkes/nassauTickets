@@ -32,7 +32,7 @@ Exemplo reduzido de senha; a resposta real também traz horários de emissão, c
 { "numero": "261118-SP001", "tipo": "SP", "status": "AGUARDANDO", "guiche": null, "atendente": null, "chamadas": 0, "ordemChamada": 0 }
 ```
 
-O servidor decide a próxima senha e registra o nome do atendente da sessão. O frontend não envia esse nome. Tipo inválido retorna `400`, fila vazia `404`, ação incompatível ou guichê ocupado `409`. Emissão e nova chamada fora das 7h às 17h retornam `409`, salvo `DEMO_OUTSIDE_HOURS=true` em desenvolvimento.
+O servidor decide a próxima senha e registra o nome do atendente da sessão. O frontend não envia esse nome. Tipo inválido retorna `400`, fila vazia `404`, ação incompatível ou guichê ocupado `409`. Emissão e chamada estão disponíveis a qualquer hora.
 
 ## Gestão
 

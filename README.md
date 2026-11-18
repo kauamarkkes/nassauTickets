@@ -135,7 +135,6 @@ Edite `backend/.env` localmente e informe o usuário, a senha e o nome do banco 
 | `FRONTEND_ORIGIN` | Origem permitida para o frontend e requisições com sessão | `http://localhost:5173` |
 | `ENABLE_TEST_RESET` | Habilita redefinição de senha apenas no servidor local de teste | `false` |
 | `TEST_RESET_CODE` | Código de redefinição do teste local; mantenha só no `.env` | vazio |
-| `DEMO_OUTSIDE_HOURS` | Permite praticar emissão e chamada fora do horário apenas em desenvolvimento | `false` |
 
 Os scripts carregam `.env` com o recurso nativo do Node.js `--env-file-if-exists`. Variáveis já definidas no ambiente têm precedência. Também é possível executar sem esse arquivo, desde que as variáveis obrigatórias estejam configuradas no ambiente.
 
@@ -151,7 +150,7 @@ Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.
 
 Execute também `docs/mer/002_autenticacao.sql` para criar `atendentes` e `sessoes_atendentes`. O servidor exige essas tabelas para iniciar. Para cadastrar o primeiro atendente, execute em um terminal interativo dentro de `backend/`:
 
-Se o banco já existia antes da regra de encerramento, faça backup e execute `docs/mer/003_encerramento.sql` uma vez. O backend encerra automaticamente senhas ainda `EMITIDA` ou `AGUARDANDO` de dias anteriores e, após as 17h, do dia atual. Elas passam a `ENCERRADA`, com horário registrado, e não entram no total de atendidas.
+Se o banco já existia antes da regra de encerramento, faça backup e execute `docs/mer/003_encerramento.sql` uma vez. O backend encerra automaticamente senhas ainda `EMITIDA` ou `AGUARDANDO` de dias anteriores. Elas passam a `ENCERRADA`, com horário registrado, e não entram no total de atendidas.
 
 ```cmd
 node --env-file=.env scripts/createAttendant.js atendente "Atendente 01"
@@ -349,7 +348,7 @@ A sequência é reiniciada de acordo com a data.
 
 Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam operações. O painel oferece **Tentar novamente** e **Ver demonstração**; os dados locais são rotulados como demonstração e não representam chamadas reais. Quando a API volta, o painel retoma os dados do servidor.
 
-* O backend só aceita novas emissões e chamadas das 7h às 17h pelo horário local do servidor; atendimentos já chamados podem ser concluídos depois. Para praticar fora desse horário, `DEMO_OUTSIDE_HOURS=true` no `.env` local funciona somente fora de produção. Senhas pendentes recebem `ENCERRADA` após o expediente ou no início da próxima execução do backend.
+* Emissão e chamada estão disponíveis a qualquer hora. Senhas pendentes de dias anteriores recebem `ENCERRADA` quando o backend está em execução ou ao iniciar novamente.
 * O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
 * O painel tenta anunciar automaticamente novas chamadas. O áudio depende de uma voz disponível e das permissões de reprodução do navegador; ao abrir a página diretamente, pode ser necessário interagir com ela antes que o navegador permita a voz.
 * A integração MySQL foi conferida nesta máquina com consultas reais; a instalação em outros computadores depende da configuração local do banco e dos scripts SQL.

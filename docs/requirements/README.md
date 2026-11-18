@@ -13,8 +13,8 @@ Referências: *Atividade — Sistema para controle de atendimento*, *Sistema par
 | RF05 | Autenticar atendente, restaurar sessão, proteger rotas e permitir logout | Implementado |
 | RF06 | Permitir gestão de usuários e consulta de indicadores | Implementado |
 | RF07 | Relatórios diário e mensal, detalhe das senhas, tempo médio e auditoria | Implementado; consulta real ao MySQL conferida nesta máquina |
-| RF08 | Restringir emissão e novas chamadas ao expediente de 7h às 17h | Implementado no código atual |
-| RF09 | Registrar formalmente o descarte de senhas pendentes ao fim do expediente | Implementado como `ENCERRADA`, com horário registrado; requer migração `003_encerramento.sql` em bancos existentes |
+| RF08 | Restringir emissão e novas chamadas ao expediente de 7h às 17h | Removido por solicitação do responsável; diverge do horário descrito nos PDFs |
+| RF09 | Registrar formalmente o descarte de senhas pendentes | Implementado como `ENCERRADA` na mudança de dia, com horário registrado; requer migração `003_encerramento.sql` em bancos existentes |
 
 ## Regras de negócio
 

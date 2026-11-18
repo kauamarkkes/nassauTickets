@@ -81,16 +81,6 @@ function rotaGestor(operacao) {
   });
 }
 
-function exigirExpediente() {
-  if (process.env.NODE_ENV !== "production" && process.env.DEMO_OUTSIDE_HOURS === "true") return;
-  const hora = new Date().getHours();
-  if (hora < 7 || hora >= 17) {
-    const erro = new Error("O expediente para emitir e chamar novas senhas é das 7h às 17h.");
-    erro.status = 409;
-    throw erro;
-  }
-}
-
 app.get("/", (_req, res) => {
   res.json({ mensagem: "API nassauTickets funcionando" });
 });
@@ -166,12 +156,10 @@ app.put("/admin/fila", rotaGestor(async (req) => ({
 app.get("/senhas", rotaAutenticada(async () => ({ dados: await listarSenhas() })));
 
 app.post("/senhas", rota(async (req) => {
-  exigirExpediente();
   return { status: 201, dados: await emitirSenha(req.body?.tipo) };
 }));
 
 app.post("/atendimentos/proxima", rotaAutenticada(async (req) => {
-  exigirExpediente();
   return { dados: await chamarProxima(req.body?.guiche, req.usuario.nome) };
 }));
 

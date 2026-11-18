@@ -4,7 +4,7 @@
 stateDiagram-v2
     [*] --> AGUARDANDO: emissão
     AGUARDANDO --> CHAMADA: chamar próxima
-    AGUARDANDO --> ENCERRADA: fim do expediente
+    AGUARDANDO --> ENCERRADA: mudança de dia
     CHAMADA --> CHAMADA_NOVAMENTE: chamar novamente
     CHAMADA --> EM_ATENDIMENTO: iniciar
     CHAMADA_NOVAMENTE --> EM_ATENDIMENTO: iniciar
@@ -12,7 +12,7 @@ stateDiagram-v2
     EM_ATENDIMENTO --> ATENDIDA: finalizar
 ```
 
-O esquema também admite o estado `EMITIDA`, mas a emissão atual grava diretamente `AGUARDANDO`. Senhas pendentes de dias anteriores ou do dia atual depois das 17h são encerradas sem contar como atendidas. O painel consulta chamadas concluídas ou ativas pela ordem de chamada e não calcula a próxima senha.
+O esquema também admite o estado `EMITIDA`, mas a emissão atual grava diretamente `AGUARDANDO`. Senhas pendentes de dias anteriores são encerradas sem contar como atendidas. O painel consulta chamadas concluídas ou ativas pela ordem de chamada e não calcula a próxima senha.
 
 ## Atores e casos de uso
 

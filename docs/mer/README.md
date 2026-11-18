@@ -1,6 +1,6 @@
 # Modelo de dados
 
-Os scripts oficiais para um banco novo são `001_senhas_fila.sql` e `002_autenticacao.sql`, nesta pasta. Execute os dois no banco informado por `DB_NAME`. Em um banco criado antes do encerramento de expediente, faça backup e execute `003_encerramento.sql` uma vez.
+Os scripts oficiais para um banco novo são `001_senhas_fila.sql` e `002_autenticacao.sql`, nesta pasta. Execute os dois no banco informado por `DB_NAME`. Em um banco criado antes da regra de encerramento de pendências, faça backup e execute `003_encerramento.sql` uma vez.
 
 ```mermaid
 erDiagram

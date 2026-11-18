@@ -49,13 +49,11 @@ export async function listarSenhas() {
 
 export async function encerrarSenhasPendentes(agora = new Date()) {
   const hoje = dataLocal(agora);
-  const modoDemo = process.env.NODE_ENV !== "production" && process.env.DEMO_OUTSIDE_HOURS === "true";
-  const ateHoje = !modoDemo && agora.getHours() >= 17;
   return transacao(async (conexao) => {
     await conexao.execute("SELECT id FROM estado_fila WHERE id = 1 FOR UPDATE");
     const [resultado] = await conexao.execute(
       `UPDATE senhas SET status = 'ENCERRADA', encerrada_em = ?
-       WHERE status IN ('EMITIDA', 'AGUARDANDO') AND data_emissao ${ateHoje ? "<=" : "<"} ?`,
+       WHERE status IN ('EMITIDA', 'AGUARDANDO') AND data_emissao < ?`,
       [dataHoraMysql(agora), hoje]
     );
     return resultado.affectedRows;
