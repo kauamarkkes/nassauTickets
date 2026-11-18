@@ -46,7 +46,7 @@ O servidor decide a próxima senha e registra o nome do atendente da sessão. O 
 | `GET /admin/fila` | Consulta da próxima preferência SE/SG |
 | `PUT /admin/fila` | Alteração com `{ "proximoNaoPrioritario": "SE" }` ou `SG` |
 
-Os filtros do resumo e relatório aceitam datas `AAAA-MM-DD`, período de até 366 dias, `tipo` (`SP`, `SE`, `SG`), `status` e `guiche`. O relatório detalhado retorna `detalhes` com número, tipo, situação, emissão, guichê, atendente e horários da primeira chamada, segunda chamada, início e fim.
+Os filtros do resumo e relatório aceitam datas `AAAA-MM-DD`, período de até 366 dias, `tipo` (`SP`, `SE`, `SG`), `status` (inclusive `ENCERRADA`) e `guiche`. O relatório detalhado retorna `detalhes` com número, tipo, situação, emissão, guichê, atendente e horários da primeira chamada, segunda chamada, início, fim e encerramento.
 
 ## Falha e contingência
 

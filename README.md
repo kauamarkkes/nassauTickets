@@ -69,6 +69,7 @@ O frontend realiza requisições HTTP para a API Express. O backend controla a f
 A comunicação entre frontend e backend é centralizada pelos arquivos `api.js` e `storage.js`. O `server.js` expõe a API e `senhasRepository.js` executa as operações no MySQL.
 
 O contrato com exemplos de requisição, resposta, autenticação e erros está em `docs/requirements/contrato-api.md`.
+Os protótipos das telas estão em `docs/mockups/README.md`, os diagramas em `docs/models/uml/README.md` e os resultados de verificação em `docs/evidencias/README.md`.
 
 ## Estrutura do repositório
 
@@ -149,6 +150,8 @@ Esse comando preserva um banco existente. O backend seleciona o banco configurad
 Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC.
 
 Execute também `docs/mer/002_autenticacao.sql` para criar `atendentes` e `sessoes_atendentes`. O servidor exige essas tabelas para iniciar. Para cadastrar o primeiro atendente, execute em um terminal interativo dentro de `backend/`:
+
+Se o banco já existia antes da regra de encerramento, faça backup e execute `docs/mer/003_encerramento.sql` uma vez. O backend encerra automaticamente senhas ainda `EMITIDA` ou `AGUARDANDO` de dias anteriores e, após as 17h, do dia atual. Elas passam a `ENCERRADA`, com horário registrado, e não entram no total de atendidas.
 
 ```cmd
 node --env-file=.env scripts/createAttendant.js atendente "Atendente 01"
@@ -346,10 +349,10 @@ A sequência é reiniciada de acordo com a data.
 
 Se a API ou o MySQL cair, o totem e o terminal mostram erro e não simulam operações. O painel oferece **Tentar novamente** e **Ver demonstração**; os dados locais são rotulados como demonstração e não representam chamadas reais. Quando a API volta, o painel retoma os dados do servidor.
 
-* O backend só aceita novas emissões e chamadas das 7h às 17h pelo horário local do servidor; atendimentos já chamados podem ser concluídos depois. Para praticar fora desse horário, `DEMO_OUTSIDE_HOURS=true` no `.env` local funciona somente fora de produção. Senhas pendentes deixam de ser elegíveis após o expediente e no dia seguinte, mas ainda não recebem um estado histórico próprio de descarte.
+* O backend só aceita novas emissões e chamadas das 7h às 17h pelo horário local do servidor; atendimentos já chamados podem ser concluídos depois. Para praticar fora desse horário, `DEMO_OUTSIDE_HOURS=true` no `.env` local funciona somente fora de produção. Senhas pendentes recebem `ENCERRADA` após o expediente ou no início da próxima execução do backend.
 * O relatório detalhado carrega o período inteiro; volumes grandes poderão exigir paginação.
 * O painel tenta anunciar automaticamente novas chamadas. O áudio depende de uma voz disponível e das permissões de reprodução do navegador; ao abrir a página diretamente, pode ser necessário interagir com ela antes que o navegador permita a voz.
-* A integração completa com MySQL ainda precisa ser conferida em um ambiente com banco ativo.
+* A integração MySQL foi conferida nesta máquina com consultas reais; a instalação em outros computadores depende da configuração local do banco e dos scripts SQL.
 
 ## Branches e entrega
 
@@ -357,11 +360,11 @@ O desenvolvimento ocorre na branch `dev`. Após revisão, o código é integrado
 
 Os commits devem registrar etapas reais do desenvolvimento e permitir identificar as contribuições dos integrantes.
 
-A entrega da AV1 pelo Teams deve informar:
+A entrega final deve informar:
 
 * URL do repositório;
 * commit avaliado;
-* tag `entrega-av1`.
+* tag de entrega definida pela equipe, após a revisão na `main`.
 
 ## Uso de inteligência artificial
 
