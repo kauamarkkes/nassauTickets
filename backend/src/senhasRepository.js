@@ -66,19 +66,7 @@ export async function emitirSenha(tipo) {
     erro.code = "TIPO_INVALIDO";
     throw erro;
   }
-
-  const conexao = await obterPool().getConnection();
-  try {
-    await conexao.beginTransaction();
-    const criada = await inserirSenhaNaTransacao(conexao, tipo);
-    await conexao.commit();
-    return criada;
-  } catch (erro) {
-    await conexao.rollback();
-    throw erro;
-  } finally {
-    conexao.release();
-  }
+  return transacao((conexao) => inserirSenhaNaTransacao(conexao, tipo));
 }
 
 // Recebe uma transação existente para permitir composição com outras operações.
@@ -199,7 +187,7 @@ export async function chamarProximaNaTransacao(conexao, guiche, atendente = "Ate
   const ordem = Number(estado.ordem_chamada) + 1;
   await conexao.execute(
     "UPDATE senhas SET status = 'CHAMADA', guiche = ?, atendente = ?, chamadas = 1, primeira_chamada_em = ?, ordem_chamada = ? WHERE numero = ?",
-    [guiche, atendente, dataHoraMysql(new Date()), ordem, proxima.numero]
+    [guiche, atendente, dataHoraMysql(agora), ordem, proxima.numero]
   );
   const ultimaFoiSp = proxima.tipo === "SP";
   const proximoNaoSp = ultimaFoiSp ? estado.proximo_nao_sp : (proxima.tipo === "SE" ? "SG" : "SE");
