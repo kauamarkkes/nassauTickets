@@ -15,4 +15,8 @@ Verificações realizadas em 18/11/2026 nesta máquina, com MySQL local. Não h�
 
 O backup local foi guardado na pasta temporária do Windows, fora do repositório. A senha do dia da verificação continuou `AGUARDANDO`; pela regra atual, ela será encerrada somente no dia seguinte se não for atendida.
 
-Ainda requer conferência presencial: reprodução do áudio no Painel após remover o botão, e fluxo completo autenticado no navegador (login, chamada, rechamada, atendimento e relatório). Essas ações dependem de interação e áudio do navegador; não são declaradas como verificadas aqui.
+Ainda requer conferência presencial: fluxo autenticado completo no navegador (login, chamada, rechamada e atendimento). A interface de relatório do gestor foi removida; a rota de relatório permanece na API. O usuário confirmou que o áudio do Painel está funcionando em seu navegador.
+
+## Verificação adicional do backend
+
+Em 18/11/2026, uma instância local separada conectou ao MySQL e respondeu: `GET /` e `GET /painel` com HTTP 200; rotas protegidas sem sessão com HTTP 401; tipo de senha inválido e JSON malformado com HTTP 400 em JSON. O fluxo autenticado com credenciais reais não foi repetido nesta verificação.
