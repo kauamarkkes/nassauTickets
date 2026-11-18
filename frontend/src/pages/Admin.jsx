@@ -5,7 +5,7 @@ import "../styles/global.css";
 const nomesStatus = {
   EMITIDA: "Emitidas", AGUARDANDO: "Aguardando", CHAMADA: "Chamadas",
   CHAMADA_NOVAMENTE: "Chamadas novamente", EM_ATENDIMENTO: "Em atendimento",
-  ATENDIDA: "Atendidas", "NÃO_COMPARECEU": "Não compareceram",
+  ATENDIDA: "Atendidas", "NÃO_COMPARECEU": "Não compareceram", ENCERRADA: "Encerradas sem atendimento",
 };
 const nomesTipo = { SP: "Prioritária", SG: "Geral", SE: "Exames" };
 
@@ -187,6 +187,7 @@ export default function Admin({ aoSessaoExpirada }) {
     { chave: "EM_ANDAMENTO", nome: "Em andamento", quantidade: (resumo.porStatus.CHAMADA ?? 0) + (resumo.porStatus.CHAMADA_NOVAMENTE ?? 0) + (resumo.porStatus.EM_ATENDIMENTO ?? 0) },
     { chave: "ATENDIDA", nome: "Atendidas", quantidade: resumo.porStatus.ATENDIDA ?? 0 },
     { chave: "NÃO_COMPARECEU", nome: "Não compareceram", quantidade: resumo.porStatus["NÃO_COMPARECEU"] ?? 0 },
+    { chave: "ENCERRADA", nome: "Encerradas", quantidade: resumo.porStatus.ENCERRADA ?? 0 },
   ] : [];
   const dadosDias = resumo ? resumo.porDia.map(({ data, quantidade }) => ({
     chave: data, nome: `${data.slice(4, 6)}/${data.slice(2, 4)}`, quantidade,
@@ -254,12 +255,12 @@ export default function Admin({ aoSessaoExpirada }) {
               <p>Atendidas por tipo: SP {relatorio.atendidasPorTipo.SP} · SG {relatorio.atendidasPorTipo.SG} · SE {relatorio.atendidasPorTipo.SE}</p>
               {relatorio.detalhes.length === 0 ? <p className="admin-vazio">Nenhuma senha no período.</p> : (
                 <div className="admin-tabela-rolagem"><table className="admin-tabela">
-                  <thead><tr><th>Senha</th><th>Tipo</th><th>Situação</th><th>Emissão</th><th>Guichê</th><th>Atendente</th><th>1ª chamada</th><th>2ª chamada</th><th>Início</th><th>Fim</th></tr></thead>
+                  <thead><tr><th>Senha</th><th>Tipo</th><th>Situação</th><th>Emissão</th><th>Guichê</th><th>Atendente</th><th>1ª chamada</th><th>2ª chamada</th><th>Início</th><th>Fim</th><th>Encerramento</th></tr></thead>
                   <tbody>{relatorio.detalhes.map((senha) => <tr key={senha.numero}>
                     <td>{senha.numero}</td><td>{senha.tipo}</td><td>{senha.status.replaceAll("_", " ")}</td>
                     <td>{senha.emitida_em}</td><td>{senha.guiche ?? ""}</td><td>{senha.atendente ?? ""}</td>
                     <td>{senha.primeira_chamada_em ?? ""}</td><td>{senha.segunda_chamada_em ?? ""}</td>
-                    <td>{senha.inicio_atendimento_em ?? ""}</td><td>{senha.finalizacao_em ?? ""}</td>
+                    <td>{senha.inicio_atendimento_em ?? ""}</td><td>{senha.finalizacao_em ?? ""}</td><td>{senha.encerrada_em ?? ""}</td>
                   </tr>)}</tbody>
                 </table></div>
               )}

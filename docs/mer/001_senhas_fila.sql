@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS senhas (
   segunda_chamada_em DATETIME(3) NULL,
   inicio_atendimento_em DATETIME(3) NULL,
   finalizacao_em DATETIME(3) NULL,
+  encerrada_em DATETIME(3) NULL,
   ordem_chamada BIGINT UNSIGNED NOT NULL DEFAULT 0,
   PRIMARY KEY (numero),
   UNIQUE KEY uq_senhas_dia_tipo_sequencia (data_emissao, tipo, sequencia),
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS senhas (
   CONSTRAINT chk_senhas_sequencia CHECK (sequencia BETWEEN 1 AND 999),
   CONSTRAINT chk_senhas_status CHECK (status IN (
     'EMITIDA', 'AGUARDANDO', 'CHAMADA', 'CHAMADA_NOVAMENTE',
-    'EM_ATENDIMENTO', 'ATENDIDA', 'NÃO_COMPARECEU'
+    'EM_ATENDIMENTO', 'ATENDIDA', 'NÃO_COMPARECEU', 'ENCERRADA'
   )),
   CONSTRAINT chk_senhas_chamadas CHECK (chamadas BETWEEN 0 AND 2),
   CONSTRAINT chk_senhas_guiche CHECK (guiche IS NULL OR guiche > 0)

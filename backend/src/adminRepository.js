@@ -21,7 +21,7 @@ function validarSenha(senha) {
 
 const STATUS = new Set([
   "EMITIDA", "AGUARDANDO", "CHAMADA", "CHAMADA_NOVAMENTE",
-  "EM_ATENDIMENTO", "ATENDIDA", "NÃO_COMPARECEU",
+  "EM_ATENDIMENTO", "ATENDIDA", "NÃO_COMPARECEU", "ENCERRADA",
 ]);
 
 function validarData(valor) {
@@ -100,7 +100,7 @@ export async function obterRelatorio(banco = obterPool(), filtros = {}) {
   if (filtros.guiche) { condicoes.push("guiche = ?"); parametros.push(Number(filtros.guiche)); }
   const [detalhes] = await banco.execute(
     `SELECT numero, tipo, status, emitida_em, guiche, atendente,
-      primeira_chamada_em, segunda_chamada_em, inicio_atendimento_em, finalizacao_em,
+      primeira_chamada_em, segunda_chamada_em, inicio_atendimento_em, finalizacao_em, encerrada_em,
       TIMESTAMPDIFF(SECOND, inicio_atendimento_em, finalizacao_em) AS duracao_segundos
      FROM senhas WHERE ${condicoes.join(" AND ")} ORDER BY data_emissao DESC, numero DESC`,
     parametros

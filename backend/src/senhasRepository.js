@@ -4,7 +4,7 @@ const TIPOS = new Set(["SP", "SG", "SE"]);
 
 const COLUNAS = `numero, data_emissao, tipo, sequencia, status, emitida_em,
   guiche, atendente, chamadas, primeira_chamada_em, segunda_chamada_em,
-  inicio_atendimento_em, finalizacao_em, ordem_chamada`;
+  inicio_atendimento_em, finalizacao_em, encerrada_em, ordem_chamada`;
 
 function horarioUtc(valor) {
   return valor === null ? null : `${valor.replace(" ", "T")}Z`;
@@ -24,6 +24,7 @@ function formatarSenha(linha) {
     segundaChamada: horarioUtc(linha.segunda_chamada_em),
     inicioAtendimento: horarioUtc(linha.inicio_atendimento_em),
     finalizacao: horarioUtc(linha.finalizacao_em),
+    encerradaEm: horarioUtc(linha.encerrada_em),
     ordemChamada: Number(linha.ordem_chamada),
   };
 }
@@ -44,6 +45,21 @@ export async function listarSenhas() {
     `SELECT ${COLUNAS} FROM senhas ORDER BY emitida_em, numero`
   );
   return linhas.map(formatarSenha);
+}
+
+export async function encerrarSenhasPendentes(agora = new Date()) {
+  const hoje = dataLocal(agora);
+  const modoDemo = process.env.NODE_ENV !== "production" && process.env.DEMO_OUTSIDE_HOURS === "true";
+  const ateHoje = !modoDemo && agora.getHours() >= 17;
+  return transacao(async (conexao) => {
+    await conexao.execute("SELECT id FROM estado_fila WHERE id = 1 FOR UPDATE");
+    const [resultado] = await conexao.execute(
+      `UPDATE senhas SET status = 'ENCERRADA', encerrada_em = ?
+       WHERE status IN ('EMITIDA', 'AGUARDANDO') AND data_emissao ${ateHoje ? "<=" : "<"} ?`,
+      [dataHoraMysql(agora), hoje]
+    );
+    return resultado.affectedRows;
+  });
 }
 
 export async function emitirSenha(tipo) {

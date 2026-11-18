@@ -21,6 +21,7 @@ import {
   chamarNovamente,
   marcarNaoCompareceu,
   obterPainel,
+  encerrarSenhasPendentes,
 } from "./senhasRepository.js";
 
 const app = express();
@@ -194,10 +195,12 @@ app.get("/painel", rota(async () => ({ dados: await obterPainel() })));
 
 let servidor;
 let encerrando = false;
+let intervaloEncerramento;
 
 async function encerrar() {
   if (encerrando) return;
   encerrando = true;
+  clearInterval(intervaloEncerramento);
 
   try {
     if (servidor?.listening) {
@@ -222,6 +225,7 @@ function informarErro(erro) {
 async function iniciar() {
   try {
     await verificarConexao();
+    await encerrarSenhasPendentes();
     if (encerrando) return;
 
     console.log("Conexão com o banco MySQL verificada.");
@@ -230,6 +234,9 @@ async function iniciar() {
     });
 
     console.log(`Servidor rodando em http://localhost:${PORT}`);
+    intervaloEncerramento = setInterval(() => {
+      encerrarSenhasPendentes().catch(informarErro);
+    }, 60000);
   } catch (erro) {
     informarErro(erro);
     process.exitCode = 1;

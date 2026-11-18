@@ -54,6 +54,7 @@ export async function verificarConexao() {
   }
   await obterPool().execute("SELECT id FROM atendentes LIMIT 1");
   await obterPool().execute("SELECT token_hash FROM sessoes_atendentes LIMIT 1");
+  await obterPool().execute("SELECT encerrada_em FROM senhas LIMIT 1");
 }
 
 export async function encerrarPool() {

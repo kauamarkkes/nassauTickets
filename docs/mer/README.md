@@ -1,6 +1,6 @@
 # Modelo de dados
 
-Os scripts oficiais para criar as tabelas são `001_senhas_fila.sql` e `002_autenticacao.sql`, nesta pasta. Execute os dois no banco informado por `DB_NAME`.
+Os scripts oficiais para um banco novo são `001_senhas_fila.sql` e `002_autenticacao.sql`, nesta pasta. Execute os dois no banco informado por `DB_NAME`. Em um banco criado antes do encerramento de expediente, faça backup e execute `003_encerramento.sql` uma vez.
 
 ```mermaid
 erDiagram
@@ -33,6 +33,7 @@ erDiagram
         datetime segunda_chamada_em
         datetime inicio_atendimento_em
         datetime finalizacao_em
+        datetime encerrada_em
         int ordem_chamada
     }
     ESTADO_FILA {
