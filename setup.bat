@@ -5,10 +5,9 @@ echo  NASSAU TICKETS - Instalando banco...
 echo ==========================================
 
 set MYSQL=
-if exist "C:\Program Files\MariaDB 11.4\bin\mysql.exe" set MYSQL="C:\Program Files\MariaDB 11.4\bin\mysql.exe"
-if exist "C:\Program Files\MariaDB 11.3\bin\mysql.exe" set MYSQL="C:\Program Files\MariaDB 11.3\bin\mysql.exe"
-if exist "C:\Program Files\MariaDB 10.11\bin\mysql.exe" set MYSQL="C:\Program Files\MariaDB 10.11\bin\mysql.exe"
-if exist "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" set MYSQL="C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe"
+for /D %%D in ("C:\Program Files\MariaDB *") do if exist "%%D\bin\mysql.exe" set MYSQL="%%D\bin\mysql.exe"
+for /D %%D in ("C:\Program Files (x86)\MariaDB *") do if exist "%%D\bin\mysql.exe" set MYSQL="%%D\bin\mysql.exe"
+for /D %%D in ("C:\Program Files\MySQL\MySQL Server *") do if exist "%%D\bin\mysql.exe" set MYSQL="%%D\bin\mysql.exe"
 if exist "C:\xampp\mysql\bin\mysql.exe" set MYSQL="C:\xampp\mysql\bin\mysql.exe"
 
 if "%MYSQL%"=="" (
