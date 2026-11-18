@@ -112,20 +112,6 @@ export default function Admin({ aoSessaoExpirada }) {
     }
   }
 
-  async function atualizarManual() {
-    setSalvando(true);
-    setErro("");
-    setMensagem("");
-    try {
-      await atualizar();
-      setMensagem("Dados atualizados.");
-    } catch (falha) {
-      tratarFalha(falha);
-    } finally {
-      setSalvando(false);
-    }
-  }
-
   async function aplicarFiltros(evento) {
     evento.preventDefault();
     setSalvando(true);
@@ -224,7 +210,6 @@ export default function Admin({ aoSessaoExpirada }) {
           <section aria-labelledby="resumo-titulo">
             <div className="admin-secao-cabecalho">
               <div><span className="admin-sobretitulo">OPERAÇÃO</span><h2 id="resumo-titulo">Resumo do período</h2></div>
-              <Button variante="secondary" className="admin-botao-secundario" onClick={atualizarManual} disabled={salvando}>Atualizar dados</Button>
             </div>
             {resumo && <>
               <div className="admin-metricas">
