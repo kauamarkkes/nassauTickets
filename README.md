@@ -145,7 +145,7 @@ CREATE DATABASE IF NOT EXISTS nassauTickets CHARACTER SET utf8mb4;
 
 Esse comando preserva um banco existente. O backend seleciona o banco configurado, mas não cria bancos nem tabelas automaticamente. No MySQL configurado para normalizar nomes em minúsculas, como nesta instalação Windows, `nassauTickets` pode aparecer como `nassautickets`.
 
-Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC. Execute `npm test` em `backend/` para verificar o repositório em transações que são desfeitas ao final.
+Depois de selecionar esse banco no Workbench, execute `docs/mer/001_senhas_fila.sql`. O script cria as tabelas `senhas` e `estado_fila` e inicia o controle da fila; pode ser executado novamente sem apagar registros. Os campos de horário representam UTC.
 
 Execute também `docs/mer/002_autenticacao.sql` para criar `atendentes` e `sessoes_atendentes`. O servidor exige essas tabelas para iniciar. Para cadastrar o primeiro atendente, execute em um terminal interativo dentro de `backend/`:
 
