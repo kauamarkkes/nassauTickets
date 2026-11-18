@@ -30,6 +30,12 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
 
 app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(express.json());
+app.use((erro, _req, res, next) => {
+  if (erro.type === "entity.parse.failed") {
+    return res.status(400).json({ erro: "JSON inválido." });
+  }
+  next(erro);
+});
 app.use((req, res, next) => {
   const origem = req.get("Origin");
   const mesmaOrigem = origem === `${req.protocol}://${req.get("host")}`;
