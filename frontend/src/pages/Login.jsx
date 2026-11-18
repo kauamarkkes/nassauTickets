@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { apiRequest } from "../api";
 import Button from "../components/Button";
 import Message from "../components/Message";
+import ROUTES from "../routes/paths";
 import "../styles/global.css";
 
 function Login({ aoEntrar }) {
@@ -29,7 +30,7 @@ function Login({ aoEntrar }) {
       });
       setSenha("");
       aoEntrar(usuario);
-      navigate(usuario.perfil === "GESTOR" ? "/admin" : "/atendimento", { replace: true });
+      navigate(usuario.perfil === "GESTOR" ? ROUTES.admin : ROUTES.attendant, { replace: true });
     } catch (falha) {
       setErro(falha.message);
     } finally {
@@ -76,7 +77,7 @@ function Login({ aoEntrar }) {
         <details className="login-ajuda">
           <summary>Esqueceu a senha?</summary>
           <p>No ambiente local de teste, você pode usar o código de redefinição.</p>
-          <Button to="/redefinir-senha" variante="secondary">Redefinir senha</Button>
+          <Button to={ROUTES.resetPassword} variante="secondary">Redefinir senha</Button>
         </details>
       </div>
     </main>
